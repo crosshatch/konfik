@@ -1,7 +1,8 @@
+import { glob } from "node:fs/promises"
+
 import { Args, Command } from "@effect/cli"
 import { FileSystem, Path } from "@effect/platform"
 import { Console, Effect } from "effect"
-import { glob } from "node:fs/promises"
 
 const cleanPackage = Effect.fn(function* (packageJsonPath: string) {
   const path = yield* Path.Path
