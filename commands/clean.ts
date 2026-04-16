@@ -7,8 +7,8 @@ export const clean = Command.make("clean", {
 }).pipe(
   Command.withHandler(
     Effect.fn(function* ({ ignore }) {
-      const packages = yield* Effect.promise(() => Array.fromAsync(glob("**/package.json"))).pipe(
-        Effect.map((v) => v.filter((v) => !ignore.some((w) => v.startsWith(w)))),
+      const packages = yield* Effect.promise(() =>
+        Array.fromAsync(glob("**/package.json", { exclude: ignore })),
       )
       const path = yield* Path.Path
       const fs = yield* FileSystem.FileSystem
