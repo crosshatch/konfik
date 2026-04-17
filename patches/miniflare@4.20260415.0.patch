@@ -1,0 +1,20 @@
+diff --git a/dist/src/index.js b/dist/src/index.js
+index 7909e721d9063c40644430a0b39d44085f1db863..e3309d53ccae6eb776c5d8b327cd96d014aa872f 100644
+--- a/dist/src/index.js
++++ b/dist/src/index.js
+@@ -88187,7 +88187,14 @@ var Miniflare = class _Miniflare {
+     const response = await fetch4(url38, forwardInit);
+     const stack = response.headers.get(CoreHeaders.ERROR_STACK);
+     if (response.status === 500 && stack !== null) {
+-      const caught = JsonErrorSchema.parse(await response.json());
++      const raw = Buffer.from(await response.arrayBuffer());
++      const encoding = response.headers.get("Content-Encoding");
++      let decoded;
++      if (encoding === "gzip") decoded = import_node_zlib.default.gunzipSync(raw);
++      else if (encoding === "deflate") decoded = import_node_zlib.default.inflateSync(raw);
++      else if (encoding === "br") decoded = import_node_zlib.default.brotliDecompressSync(raw);
++      else decoded = raw;
++      const caught = JsonErrorSchema.parse(JSON.parse(decoded.toString("utf8")));
+       throw reviveError(this.#workerSrcOpts, caught);
+     }
+     const contentEncoding = response.headers.get("Content-Encoding");
