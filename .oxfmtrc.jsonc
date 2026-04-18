@@ -2,8 +2,8 @@
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "semi": false,
   "experimentalSortPackageJson": {},
-  "ignorePatterns": ["repos/**", "!repos/konfik/**", "**/*.gen.ts"],
+  "ignorePatterns": ["repos/**", "**/*.gen.ts"],
   "experimentalSortImports": {},
   "experimentalTailwindcss": { "functions": ["cn"] },
-  "proseWrap": "always"
+  "proseWrap": "always",
 }
