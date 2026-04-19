@@ -1,22 +1,30 @@
 name: Prepare Environment
 description: Install node, pnpm and package dependencies.
+inputs:
+  playwright:
+    description: Install Playwright browsers and system dependencies.
+    required: false
+    default: "false"
 runs:
   using: composite
   steps:
-    - uses: pnpm/action-setup@v4
+    - uses: pnpm/action-setup@v5
     - uses: actions/setup-node@v6
       with:
         cache: pnpm
         node-version: 22
     - shell: bash
       run: pnpm install --frozen-lockfile
-    # - shell: bash
-    #   run: echo "PLAYWRIGHT_BROWSERS_PATH=${{ github.workspace }}/.cache/ms-playwright" >> "$GITHUB_ENV"
-    # - uses: actions/cache@v4
-    #   with:
-    #     path: ${{ github.workspace }}/.cache/ms-playwright
-    #     key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-playwright-
-    # - shell: bash
-    #   run: pnpm playwright install --with-deps
+    - if: inputs.playwright == 'true'
+      shell: bash
+      run: echo "PLAYWRIGHT_BROWSERS_PATH=${{ github.workspace }}/.cache/ms-playwright" >> "$GITHUB_ENV"
+    - if: inputs.playwright == 'true'
+      uses: actions/cache@v5
+      with:
+        path: ${{ github.workspace }}/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
+    - if: inputs.playwright == 'true'
+      shell: bash
+      run: pnpm playwright install --with-deps
