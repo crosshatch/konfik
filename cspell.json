@@ -3,6 +3,13 @@
   "version": "0.2",
   "enableGlobDot": true,
   "dictionaryDefinitions": [
+    {
+      "name": "project-words",
+      "path": "./words.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": [
     "bash",
     "coding-compound-terms",
     "companies",
@@ -31,13 +38,8 @@
     "sql",
     "typescript",
     "web-services",
-    {
-      "name": "project-words",
-      "path": "./words.txt",
-      "addWords": true
-    }
+    "project-words"
   ],
-  "dictionaries": ["project-words"],
   "useGitignore": true,
   "ignorePaths": ["LICENSE"]
 }

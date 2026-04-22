@@ -1,1 +1,5 @@
-
+oxlint
+oxfmt
+scls
+langserver
+sqls

@@ -36,7 +36,7 @@ url = "https://json.schemastore.org/package.json"
 
 [[language]]
 name = "css"
-roots = ["package.json"]
+roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
   { name = "vscode-css-language-server", except-features = [
     "format",
@@ -52,7 +52,7 @@ auto-format = true
 
 [[language]]
 name = "docker-compose"
-roots = ["package.json"]
+roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
   "docker-compose-langserver",
   { name = "yaml-language-server", except-features = [
@@ -67,7 +67,7 @@ auto-format = true
 
 [[language]]
 name = "html"
-roots = ["package.json"]
+roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
   { name = "vscode-html-language-server", except-features = [
     "format",
@@ -83,7 +83,7 @@ auto-format = true
 
 [[language]]
 name = "json"
-roots = ["package.json"]
+roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
   { name = "vscode-json-language-server", except-features = [
     "format",
@@ -97,7 +97,7 @@ auto-format = true
 
 [[language]]
 name = "jsonc"
-roots = ["package.json"]
+roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
   { name = "vscode-json-language-server", except-features = [
     "format",
@@ -111,13 +111,13 @@ auto-format = true
 
 [[language]]
 name = "markdown"
-roots = ["package.json"]
+roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = ["marksman", "markdown-oxide", "oxlint", "oxfmt", "cspell", "scls"]
 auto-format = true
 
 [[language]]
 name = "nix"
-roots = ["package.json"]
+roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = ["nil", "nixd", "cspell", "scls"]
 formatter = { command = "nixfmt" }
 auto-format = true
@@ -128,7 +128,7 @@ language-servers = ["sqls", "cspell", "scls"]
 
 [[language]]
 name = "toml"
-roots = ["package.json"]
+roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
   { name = "taplo", except-features = [
     "format",
@@ -145,7 +145,7 @@ auto-format = true
 
 [[language]]
 name = "tsx"
-roots = ["package.json"]
+roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
   { name = "typescript-language-server", except-features = [
     "format",
@@ -162,7 +162,7 @@ auto-format = true
 
 [[language]]
 name = "typescript"
-roots = ["package.json"]
+roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
   { name = "typescript-language-server", except-features = [
     "format",
@@ -177,7 +177,7 @@ auto-format = true
 
 [[language]]
 name = "yaml"
-roots = ["package.json"]
+roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
   { name = "yaml-language-server", except-features = [
     "format",
