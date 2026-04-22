@@ -1,7 +1,8 @@
-oxlint
-oxfmt
-scls
-langserver
-sqls
 httpapi
 hyperdrive
+langserver
+oxfmt
+oxlint
+pglite
+scls
+sqls
