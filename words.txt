@@ -6,3 +6,4 @@ oxlint
 pglite
 scls
 sqls
+konfik
