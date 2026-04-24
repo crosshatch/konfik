@@ -11,7 +11,7 @@ inputs:
     description: Cloudflare account ID.
     required: true
   secrets-json:
-    description: JSON object of secrets to push, typically `${{ toJSON(secrets) }}`. `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `github_token` are stripped before push.
+    description: JSON object of secrets to push, typically toJSON(secrets) from the caller. CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, and github_token are stripped before push.
     required: true
 runs:
   using: composite
