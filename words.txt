@@ -44,3 +44,5 @@ vocs
 webauthn
 widgeting
 workerd
+inflights
+replayable
