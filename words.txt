@@ -1,4 +1,6 @@
+bunx
 caip
+codegen
 dotenvx
 hibernatable
 httpapi
@@ -6,13 +8,16 @@ httpclient
 hyperdrive
 indexeddb
 isready
+jaegertracing
 keypair
 kitlangton
 konfik
 langserver
+lookback
 millis
 nanos
 onramping
+otpl
 oxfmt
 oxlint
 pglite
@@ -21,6 +26,7 @@ prfv
 rpid
 scls
 scure
+shiki
 simplewebauthn
 solana
 sqls

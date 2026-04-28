@@ -1,0 +1,192 @@
+diff --git a/dist/unstable/observability/OtlpExporter.d.ts b/dist/unstable/observability/OtlpExporter.d.ts
+index 13fb69bb0611452978525e6f08553e2445befdb5..a2eeab53ca5d378804efa70a07c7bb0e53cc4963 100644
+--- a/dist/unstable/observability/OtlpExporter.d.ts
++++ b/dist/unstable/observability/OtlpExporter.d.ts
+@@ -1,9 +1,25 @@
++import * as Context from "../../Context.ts";
+ import * as Duration from "../../Duration.ts";
+ import * as Effect from "../../Effect.ts";
++import * as Layer from "../../Layer.ts";
+ import * as Scope from "../../Scope.ts";
+ import * as Headers from "../../unstable/http/Headers.ts";
+ import * as HttpClient from "../../unstable/http/HttpClient.ts";
+ import type { HttpBody } from "../http/HttpBody.ts";
++/**
++ * @since 4.0.0
++ * @category Services
++ */
++export declare class Exporters extends Context.Service<Exporters, {
++    readonly register: (exporter: Effect.Effect<void>) => Effect.Effect<void>;
++    readonly flush: Effect.Effect<void>;
++}>() {
++}
++/**
++ * @since 4.0.0
++ * @category Layers
++ */
++export declare const layerExporters: Layer.Layer<Exporters>;
+ /**
+  * @since 4.0.0
+  * @category Constructors
+diff --git a/dist/unstable/observability/OtlpExporter.js b/dist/unstable/observability/OtlpExporter.js
+index a6362c6a9bb64448d2b5b0674151d8eb0e3be0e5..4cda2696e458961c5b885c43fc2a04a29045817b 100644
+--- a/dist/unstable/observability/OtlpExporter.js
++++ b/dist/unstable/observability/OtlpExporter.js
+@@ -6,10 +6,13 @@ import * as Context from "../../Context.js";
+ import * as Duration from "../../Duration.js";
+ import * as Effect from "../../Effect.js";
+ import * as Fiber from "../../Fiber.js";
++import * as Layer from "../../Layer.js";
+ import * as Num from "../../Number.js";
+ import * as Option from "../../Option.js";
++import * as Ref from "../../Ref.js";
+ import * as Schedule from "../../Schedule.js";
+ import * as Scope from "../../Scope.js";
++import * as Semaphore from "../../Semaphore.js";
+ import * as Headers from "../../unstable/http/Headers.js";
+ import * as HttpClient from "../../unstable/http/HttpClient.js";
+ import * as HttpClientError from "../../unstable/http/HttpClientError.js";
+@@ -21,6 +24,25 @@ const policy = /*#__PURE__*/Schedule.forever.pipe(Schedule.passthrough, /*#__PUR
+   }
+   return Effect.succeed(Duration.seconds(1));
+ }));
++/**
++ * @since 4.0.0
++ * @category Services
++ */
++export class Exporters extends Context.Service()("effect/unstable/observability/OtlpExporter/Exporters") {}
++/**
++ * @since 4.0.0
++ * @category Layers
++ */
++export const layerExporters = /*#__PURE__*/Layer.effect(Exporters, /*#__PURE__*/Effect.gen(function* () {
++  const exporters = yield* Ref.make([]);
++  return {
++    register: exporter => Ref.update(exporters, all => [...all, exporter]),
++    flush: Ref.get(exporters).pipe(Effect.flatMap(all => Effect.forEach(all, exporter => exporter, {
++      concurrency: "unbounded",
++      discard: true
++    })))
++  };
++}));
+ /**
+  * @since 4.0.0
+  * @category Constructors
+@@ -46,7 +68,8 @@ export const make = /*#__PURE__*/Effect.fnUntraced(function* (options) {
+     headers
+   });
+   let buffer = [];
+-  const runExport = Effect.suspend(() => {
++  const semaphore = yield* Semaphore.make(1);
++  const runExport = semaphore.withPermits(1)(Effect.suspend(() => {
+     if (disabledUntil !== undefined && clock.currentTimeMillisUnsafe() < disabledUntil) {
+       return Effect.void;
+     } else if (disabledUntil !== undefined) {
+@@ -60,7 +83,7 @@ export const make = /*#__PURE__*/Effect.fnUntraced(function* (options) {
+       buffer = [];
+     }
+     return client.execute(HttpClientRequest.setBody(request, options.body(items))).pipe(Effect.asVoid, Effect.withTracerEnabled(false));
+-  }).pipe(Effect.catchCause(cause => {
++  })).pipe(Effect.catchCause(cause => {
+     if (disabledUntil !== undefined) return Effect.void;
+     disabledUntil = clock.currentTimeMillisUnsafe() + 60_000;
+     buffer = [];
+@@ -69,6 +92,10 @@ export const make = /*#__PURE__*/Effect.fnUntraced(function* (options) {
+     package: "@effect/opentelemetry",
+     module: options.label
+   }));
++  const exporters = yield* Effect.serviceOption(Exporters);
++  if (Option.isSome(exporters)) {
++    yield* exporters.value.register(runExport);
++  }
+   yield* Scope.addFinalizer(scope, runExport.pipe(Effect.ignore, Effect.interruptible, Effect.timeoutOption(options.shutdownTimeout)));
+   yield* Effect.sleep(exportInterval).pipe(Effect.andThen(runExport), Effect.forever, Effect.forkIn(scope));
+   return {
+diff --git a/src/unstable/observability/OtlpExporter.ts b/src/unstable/observability/OtlpExporter.ts
+index 7a61d926f0c5d3e58566457096e4081b44a35de5..71370dbc3580b39763c43103a8f369446fe52408 100644
+--- a/src/unstable/observability/OtlpExporter.ts
++++ b/src/unstable/observability/OtlpExporter.ts
+@@ -6,10 +6,13 @@ import * as Context from "../../Context.ts"
+ import * as Duration from "../../Duration.ts"
+ import * as Effect from "../../Effect.ts"
+ import * as Fiber from "../../Fiber.ts"
++import * as Layer from "../../Layer.ts"
+ import * as Num from "../../Number.ts"
+ import * as Option from "../../Option.ts"
++import * as Ref from "../../Ref.ts"
+ import * as Schedule from "../../Schedule.ts"
+ import * as Scope from "../../Scope.ts"
++import * as Semaphore from "../../Semaphore.ts"
+ import * as Headers from "../../unstable/http/Headers.ts"
+ import * as HttpClient from "../../unstable/http/HttpClient.ts"
+ import * as HttpClientError from "../../unstable/http/HttpClientError.ts"
+@@ -34,6 +37,38 @@ const policy = Schedule.forever.pipe(
+   })
+ )
+ 
++/**
++ * @since 4.0.0
++ * @category Services
++ */
++export class Exporters extends Context.Service<Exporters, {
++  readonly register: (exporter: Effect.Effect<void>) => Effect.Effect<void>
++  readonly flush: Effect.Effect<void>
++}>()("effect/unstable/observability/OtlpExporter/Exporters") {}
++
++/**
++ * @since 4.0.0
++ * @category Layers
++ */
++export const layerExporters: Layer.Layer<Exporters> = Layer.effect(
++  Exporters,
++  Effect.gen(function*() {
++    const exporters = yield* Ref.make<ReadonlyArray<Effect.Effect<void>>>([])
++
++    return {
++      register: (exporter) => Ref.update(exporters, (all) => [...all, exporter]),
++      flush: Ref.get(exporters).pipe(
++        Effect.flatMap((all) =>
++          Effect.forEach(all, (exporter) => exporter, {
++            concurrency: "unbounded",
++            discard: true
++          })
++        )
++      )
++    }
++  })
++)
++
+ /**
+  * @since 4.0.0
+  * @category Constructors
+@@ -74,7 +109,8 @@ export const make: (
+ 
+   const request = HttpClientRequest.post(options.url, { headers })
+   let buffer: Array<any> = []
+-  const runExport = Effect.suspend(() => {
++  const semaphore = yield* Semaphore.make(1)
++  const runExport = semaphore.withPermits(1)(Effect.suspend(() => {
+     if (disabledUntil !== undefined && clock.currentTimeMillisUnsafe() < disabledUntil) {
+       return Effect.void
+     } else if (disabledUntil !== undefined) {
+@@ -93,7 +129,7 @@ export const make: (
+       Effect.asVoid,
+       Effect.withTracerEnabled(false)
+     )
+-  }).pipe(
++  })).pipe(
+     Effect.catchCause((cause) => {
+       if (disabledUntil !== undefined) return Effect.void
+       disabledUntil = clock.currentTimeMillisUnsafe() + 60_000
+@@ -106,6 +142,11 @@ export const make: (
+     })
+   )
+ 
++  const exporters = yield* Effect.serviceOption(Exporters)
++  if (Option.isSome(exporters)) {
++    yield* exporters.value.register(runExport)
++  }
++
+   yield* Scope.addFinalizer(
+     scope,
+     runExport.pipe(
