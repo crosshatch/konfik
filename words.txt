@@ -1,11 +1,15 @@
 bunx
 caip
+caip
+cmdk
 codegen
+dismissable
 dotenvx
 hibernatable
 httpapi
 httpclient
 hyperdrive
+indexeddb
 indexeddb
 isready
 jaegertracing
@@ -38,4 +42,5 @@ vaul
 viem
 vocs
 webauthn
+widgeting
 workerd
