@@ -2,7 +2,7 @@ diff --git a/dist/unstable/observability/OtlpExporter.d.ts b/dist/unstable/obser
 index 13fb69bb0611452978525e6f08553e2445befdb5..a2eeab53ca5d378804efa70a07c7bb0e53cc4963 100644
 --- a/dist/unstable/observability/OtlpExporter.d.ts
 +++ b/dist/unstable/observability/OtlpExporter.d.ts
-@@ -1,9 +1,25 @@
+@@ -1,9 +1,26 @@
 +import * as Context from "../../Context.ts";
  import * as Duration from "../../Duration.ts";
  import * as Effect from "../../Effect.ts";
@@ -15,10 +15,11 @@ index 13fb69bb0611452978525e6f08553e2445befdb5..a2eeab53ca5d378804efa70a07c7bb0e
 + * @since 4.0.0
 + * @category Services
 + */
-+export declare class Exporters extends Context.Service<Exporters, {
++declare const Exporters_base: Context.ServiceClass<Exporters, "effect/unstable/observability/OtlpExporter/Exporters", {
 +    readonly register: (exporter: Effect.Effect<void>) => Effect.Effect<void>;
 +    readonly flush: Effect.Effect<void>;
-+}>() {
++}>;
++export declare class Exporters extends Exporters_base {
 +}
 +/**
 + * @since 4.0.0
