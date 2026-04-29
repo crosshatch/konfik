@@ -1,5 +1,36 @@
+diff --git a/dist/unstable/http/HttpClient.js b/dist/unstable/http/HttpClient.js
+index 03dcef7a810665912149148e70f1cd2703d8f48a..346901975ffa9d86c98309d648576a8f5f290b98 100644
+--- a/dist/unstable/http/HttpClient.js
++++ b/dist/unstable/http/HttpClient.js
+@@ -549,7 +549,16 @@ export const layerMergedContext = effect => Layer.effect(HttpClient)(Effect.cont
+ // -----------------------------------------------------------------------------
+ // internal
+ // -----------------------------------------------------------------------------
+-const responseRegistry = /*#__PURE__*/(() => {
++let responseRegistryInstance;
++const responseRegistry = {
++  register(response, controller) {
++    (responseRegistryInstance ??= makeResponseRegistry()).register(response, controller);
++  },
++  unregister(response) {
++    (responseRegistryInstance ??= makeResponseRegistry()).unregister(response);
++  }
++};
++const makeResponseRegistry = () => {
+   if ("FinalizationRegistry" in globalThis && globalThis.FinalizationRegistry) {
+     const registry = /*#__PURE__*/new FinalizationRegistry(controller => {
+       controller.abort();
+@@ -575,7 +584,7 @@ const responseRegistry = /*#__PURE__*/(() => {
+       timers.delete(response);
+     }
+   };
+-})();
++};
+ const scopedRequests = /*#__PURE__*/new WeakMap();
+ class InterruptibleResponse {
+   original;
 diff --git a/dist/unstable/observability/OtlpExporter.d.ts b/dist/unstable/observability/OtlpExporter.d.ts
-index 13fb69bb0611452978525e6f08553e2445befdb5..a2eeab53ca5d378804efa70a07c7bb0e53cc4963 100644
+index 13fb69bb0611452978525e6f08553e2445befdb5..5ef7f20d3b53d42b5c084b63698386e45c7a66bb 100644
 --- a/dist/unstable/observability/OtlpExporter.d.ts
 +++ b/dist/unstable/observability/OtlpExporter.d.ts
 @@ -1,9 +1,26 @@
@@ -11,14 +42,21 @@ index 13fb69bb0611452978525e6f08553e2445befdb5..a2eeab53ca5d378804efa70a07c7bb0e
  import * as Headers from "../../unstable/http/Headers.ts";
  import * as HttpClient from "../../unstable/http/HttpClient.ts";
  import type { HttpBody } from "../http/HttpBody.ts";
-+/**
-+ * @since 4.0.0
-+ * @category Services
-+ */
 +declare const Exporters_base: Context.ServiceClass<Exporters, "effect/unstable/observability/OtlpExporter/Exporters", {
 +    readonly register: (exporter: Effect.Effect<void>) => Effect.Effect<void>;
 +    readonly flush: Effect.Effect<void>;
 +}>;
++/**
++ * @since 4.0.0
++ * @category Services
++ */
+<<<<<<< HEAD
++declare const Exporters_base: Context.ServiceClass<Exporters, "effect/unstable/observability/OtlpExporter/Exporters", {
++    readonly register: (exporter: Effect.Effect<void>) => Effect.Effect<void>;
++    readonly flush: Effect.Effect<void>;
++}>;
+=======
+>>>>>>> 91f4716 (add effect otel patch for cf tracing)
 +export declare class Exporters extends Exporters_base {
 +}
 +/**
@@ -29,8 +67,22 @@ index 13fb69bb0611452978525e6f08553e2445befdb5..a2eeab53ca5d378804efa70a07c7bb0e
  /**
   * @since 4.0.0
   * @category Constructors
+@@ -12,11 +29,12 @@ export declare const make: (options: {
+     readonly url: string;
+     readonly headers: Headers.Input | undefined;
+     readonly label: string;
+-    readonly exportInterval: Duration.Input;
++    readonly exportInterval: Duration.Input | "disabled";
+     readonly maxBatchSize: number | "disabled";
+     readonly body: (data: Array<any>) => HttpBody;
+     readonly shutdownTimeout: Duration.Input;
+ }) => Effect.Effect<{
+     readonly push: (data: unknown) => void;
+ }, never, HttpClient.HttpClient | Scope.Scope>;
++export {};
+ //# sourceMappingURL=OtlpExporter.d.ts.map
 diff --git a/dist/unstable/observability/OtlpExporter.js b/dist/unstable/observability/OtlpExporter.js
-index a6362c6a9bb64448d2b5b0674151d8eb0e3be0e5..4cda2696e458961c5b885c43fc2a04a29045817b 100644
+index a6362c6a9bb64448d2b5b0674151d8eb0e3be0e5..be4f2bab042b0ea2d6c189e2763b4ef4ed590db1 100644
 --- a/dist/unstable/observability/OtlpExporter.js
 +++ b/dist/unstable/observability/OtlpExporter.js
 @@ -6,10 +6,13 @@ import * as Context from "../../Context.js";
@@ -73,7 +125,15 @@ index a6362c6a9bb64448d2b5b0674151d8eb0e3be0e5..4cda2696e458961c5b885c43fc2a04a2
  /**
   * @since 4.0.0
   * @category Constructors
-@@ -46,7 +68,8 @@ export const make = /*#__PURE__*/Effect.fnUntraced(function* (options) {
+@@ -30,7 +52,6 @@ export const make = /*#__PURE__*/Effect.fnUntraced(function* (options) {
+   const clock = Context.get(services, Clock);
+   const scope = Context.get(services, Scope.Scope);
+   const runFork = Effect.runForkWith(services);
+-  const exportInterval = Duration.max(Duration.fromInputUnsafe(options.exportInterval), Duration.zero);
+   let disabledUntil = undefined;
+   const client = HttpClient.filterStatusOk(Context.get(services, HttpClient.HttpClient)).pipe(HttpClient.transformResponse(Effect.provideService(HttpClient.TracerPropagationEnabled, false)), HttpClient.retryTransient({
+     schedule: policy,
+@@ -46,7 +67,8 @@ export const make = /*#__PURE__*/Effect.fnUntraced(function* (options) {
      headers
    });
    let buffer = [];
@@ -83,28 +143,125 @@ index a6362c6a9bb64448d2b5b0674151d8eb0e3be0e5..4cda2696e458961c5b885c43fc2a04a2
      if (disabledUntil !== undefined && clock.currentTimeMillisUnsafe() < disabledUntil) {
        return Effect.void;
      } else if (disabledUntil !== undefined) {
-@@ -60,7 +83,7 @@ export const make = /*#__PURE__*/Effect.fnUntraced(function* (options) {
+@@ -59,8 +81,8 @@ export const make = /*#__PURE__*/Effect.fnUntraced(function* (options) {
+       }
        buffer = [];
      }
-     return client.execute(HttpClientRequest.setBody(request, options.body(items))).pipe(Effect.asVoid, Effect.withTracerEnabled(false));
+-    return client.execute(HttpClientRequest.setBody(request, options.body(items))).pipe(Effect.asVoid, Effect.withTracerEnabled(false));
 -  }).pipe(Effect.catchCause(cause => {
++    return client.execute(HttpClientRequest.setBody(request, options.body(items))).pipe(Effect.flatMap(response => response.text), Effect.asVoid, Effect.withTracerEnabled(false));
 +  })).pipe(Effect.catchCause(cause => {
      if (disabledUntil !== undefined) return Effect.void;
      disabledUntil = clock.currentTimeMillisUnsafe() + 60_000;
      buffer = [];
-@@ -69,6 +92,10 @@ export const make = /*#__PURE__*/Effect.fnUntraced(function* (options) {
+@@ -69,13 +91,20 @@ export const make = /*#__PURE__*/Effect.fnUntraced(function* (options) {
      package: "@effect/opentelemetry",
      module: options.label
    }));
+-  yield* Scope.addFinalizer(scope, runExport.pipe(Effect.ignore, Effect.interruptible, Effect.timeoutOption(options.shutdownTimeout)));
+-  yield* Effect.sleep(exportInterval).pipe(Effect.andThen(runExport), Effect.forever, Effect.forkIn(scope));
 +  const exporters = yield* Effect.serviceOption(Exporters);
 +  if (Option.isSome(exporters)) {
 +    yield* exporters.value.register(runExport);
 +  }
-   yield* Scope.addFinalizer(scope, runExport.pipe(Effect.ignore, Effect.interruptible, Effect.timeoutOption(options.shutdownTimeout)));
-   yield* Effect.sleep(exportInterval).pipe(Effect.andThen(runExport), Effect.forever, Effect.forkIn(scope));
++  if (options.exportInterval !== "disabled") {
++    yield* Scope.addFinalizer(scope, runExport.pipe(Effect.ignore, Effect.interruptible, Effect.timeoutOption(options.shutdownTimeout)));
++    const exportInterval = Duration.max(Duration.fromInputUnsafe(options.exportInterval), Duration.zero);
++    yield* Effect.sleep(exportInterval).pipe(Effect.andThen(runExport), Effect.forever, Effect.forkIn(scope));
++  }
    return {
+     push(data) {
+       if (disabledUntil !== undefined) return;
+       buffer.push(data);
+-      if (options.maxBatchSize !== "disabled" && buffer.length >= options.maxBatchSize) {
++      if (options.exportInterval !== "disabled" && options.maxBatchSize !== "disabled" && buffer.length >= options.maxBatchSize) {
+         Fiber.runIn(runFork(runExport), scope);
+       }
+     }
+diff --git a/dist/unstable/observability/OtlpLogger.d.ts b/dist/unstable/observability/OtlpLogger.d.ts
+index 1307949a8ec37c07d450680f35666da5fe68b144..a9baf0492bf20465771fc1a66637bb0f1bbb6b34 100644
+--- a/dist/unstable/observability/OtlpLogger.d.ts
++++ b/dist/unstable/observability/OtlpLogger.d.ts
+@@ -19,7 +19,7 @@ export declare const make: (options: {
+         readonly attributes?: Record<string, unknown>;
+     } | undefined;
+     readonly headers?: Headers.Input | undefined;
+-    readonly exportInterval?: Duration.Input | undefined;
++    readonly exportInterval?: Duration.Input | "disabled" | undefined;
+     readonly maxBatchSize?: number | undefined;
+     readonly shutdownTimeout?: Duration.Input | undefined;
+     readonly excludeLogSpans?: boolean | undefined;
+@@ -36,7 +36,7 @@ export declare const layer: (options: {
+         readonly attributes?: Record<string, unknown>;
+     } | undefined;
+     readonly headers?: Headers.Input | undefined;
+-    readonly exportInterval?: Duration.Input | undefined;
++    readonly exportInterval?: Duration.Input | "disabled" | undefined;
+     readonly maxBatchSize?: number | undefined;
+     readonly shutdownTimeout?: Duration.Input | undefined;
+     readonly excludeLogSpans?: boolean | undefined;
+diff --git a/dist/unstable/observability/OtlpTracer.d.ts b/dist/unstable/observability/OtlpTracer.d.ts
+index 99fe84575aef41b88e5b9959cacab55c9be8ae10..f64a92608d098db2fa8f2d63b3b53af0bcc62292 100644
+--- a/dist/unstable/observability/OtlpTracer.d.ts
++++ b/dist/unstable/observability/OtlpTracer.d.ts
+@@ -19,7 +19,7 @@ export declare const make: (options: {
+         readonly attributes?: Record<string, unknown>;
+     } | undefined;
+     readonly headers?: Headers.Input | undefined;
+-    readonly exportInterval?: Duration.Input | undefined;
++    readonly exportInterval?: Duration.Input | "disabled" | undefined;
+     readonly maxBatchSize?: number | undefined;
+     readonly context?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined;
+     readonly shutdownTimeout?: Duration.Input | undefined;
+@@ -36,7 +36,7 @@ export declare const layer: (options: {
+         readonly attributes?: Record<string, unknown>;
+     } | undefined;
+     readonly headers?: Headers.Input | undefined;
+-    readonly exportInterval?: Duration.Input | undefined;
++    readonly exportInterval?: Duration.Input | "disabled" | undefined;
+     readonly maxBatchSize?: number | undefined;
+     readonly context?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined;
+     readonly shutdownTimeout?: Duration.Input | undefined;
+diff --git a/src/unstable/http/HttpClient.ts b/src/unstable/http/HttpClient.ts
+index 07e9c8e92a16e827f75da9a5018a7c4ad608d655..d09df144f37deb8ed211fe615429abcac9a8837e 100644
+--- a/src/unstable/http/HttpClient.ts
++++ b/src/unstable/http/HttpClient.ts
+@@ -1634,7 +1634,23 @@ export const layerMergedContext = <E, R>(
+ // internal
+ // -----------------------------------------------------------------------------
+ 
+-const responseRegistry = (() => {
++interface ResponseRegistry {
++  readonly register: (response: HttpClientResponse.HttpClientResponse, controller: AbortController) => void
++  readonly unregister: (response: HttpClientResponse.HttpClientResponse) => void
++}
++
++let responseRegistryInstance: ResponseRegistry | undefined
++
++const responseRegistry: ResponseRegistry = {
++  register(response, controller) {
++    ;(responseRegistryInstance ??= makeResponseRegistry()).register(response, controller)
++  },
++  unregister(response) {
++    ;(responseRegistryInstance ??= makeResponseRegistry()).unregister(response)
++  }
++}
++
++const makeResponseRegistry = (): ResponseRegistry => {
+   if ("FinalizationRegistry" in globalThis && globalThis.FinalizationRegistry) {
+     const registry = new FinalizationRegistry((controller: AbortController) => {
+       controller.abort()
+@@ -1661,7 +1677,7 @@ const responseRegistry = (() => {
+       timers.delete(response)
+     }
+   }
+-})()
++}
+ 
+ const scopedRequests = new WeakMap<HttpClientRequest.HttpClientRequest, AbortController>()
+ 
 diff --git a/src/unstable/observability/OtlpExporter.ts b/src/unstable/observability/OtlpExporter.ts
-index 7a61d926f0c5d3e58566457096e4081b44a35de5..71370dbc3580b39763c43103a8f369446fe52408 100644
+index 7a61d926f0c5d3e58566457096e4081b44a35de5..31e28cd24d70dadf406b28b2c302431413883a0d 100644
 --- a/src/unstable/observability/OtlpExporter.ts
 +++ b/src/unstable/observability/OtlpExporter.ts
 @@ -6,10 +6,13 @@ import * as Context from "../../Context.ts"
@@ -160,7 +317,24 @@ index 7a61d926f0c5d3e58566457096e4081b44a35de5..71370dbc3580b39763c43103a8f36944
  /**
   * @since 4.0.0
   * @category Constructors
-@@ -74,7 +109,8 @@ export const make: (
+@@ -43,7 +78,7 @@ export const make: (
+     readonly url: string
+     readonly headers: Headers.Input | undefined
+     readonly label: string
+-    readonly exportInterval: Duration.Input
++    readonly exportInterval: Duration.Input | "disabled"
+     readonly maxBatchSize: number | "disabled"
+     readonly body: (data: Array<any>) => HttpBody
+     readonly shutdownTimeout: Duration.Input
+@@ -57,7 +92,6 @@ export const make: (
+   const clock = Context.get(services, Clock)
+   const scope = Context.get(services, Scope.Scope)
+   const runFork = Effect.runForkWith(services)
+-  const exportInterval = Duration.max(Duration.fromInputUnsafe(options.exportInterval), Duration.zero)
+   let disabledUntil: number | undefined = undefined
+ 
+   const client = HttpClient.filterStatusOk(Context.get(services, HttpClient.HttpClient)).pipe(
+@@ -74,7 +108,8 @@ export const make: (
  
    const request = HttpClientRequest.post(options.url, { headers })
    let buffer: Array<any> = []
@@ -170,7 +344,11 @@ index 7a61d926f0c5d3e58566457096e4081b44a35de5..71370dbc3580b39763c43103a8f36944
      if (disabledUntil !== undefined && clock.currentTimeMillisUnsafe() < disabledUntil) {
        return Effect.void
      } else if (disabledUntil !== undefined) {
-@@ -93,7 +129,7 @@ export const make: (
+@@ -90,10 +125,11 @@ export const make: (
+     return client.execute(
+       HttpClientRequest.setBody(request, options.body(items))
+     ).pipe(
++      Effect.flatMap((response) => response.text),
        Effect.asVoid,
        Effect.withTracerEnabled(false)
      )
@@ -179,15 +357,97 @@ index 7a61d926f0c5d3e58566457096e4081b44a35de5..71370dbc3580b39763c43103a8f36944
      Effect.catchCause((cause) => {
        if (disabledUntil !== undefined) return Effect.void
        disabledUntil = clock.currentTimeMillisUnsafe() + 60_000
-@@ -106,6 +142,11 @@ export const make: (
+@@ -106,26 +142,36 @@ export const make: (
      })
    )
  
+-  yield* Scope.addFinalizer(
+-    scope,
+-    runExport.pipe(
+-      Effect.ignore,
+-      Effect.interruptible,
+-      Effect.timeoutOption(options.shutdownTimeout)
 +  const exporters = yield* Effect.serviceOption(Exporters)
 +  if (Option.isSome(exporters)) {
 +    yield* exporters.value.register(runExport)
 +  }
 +
-   yield* Scope.addFinalizer(
-     scope,
-     runExport.pipe(
++  if (options.exportInterval !== "disabled") {
++    yield* Scope.addFinalizer(
++      scope,
++      runExport.pipe(
++        Effect.ignore,
++        Effect.interruptible,
++        Effect.timeoutOption(options.shutdownTimeout)
++      )
+     )
+-  )
+ 
+-  yield* Effect.sleep(exportInterval).pipe(
+-    Effect.andThen(runExport),
+-    Effect.forever,
+-    Effect.forkIn(scope)
+-  )
++    const exportInterval = Duration.max(Duration.fromInputUnsafe(options.exportInterval), Duration.zero)
++    yield* Effect.sleep(exportInterval).pipe(
++      Effect.andThen(runExport),
++      Effect.forever,
++      Effect.forkIn(scope)
++    )
++  }
+ 
+   return {
+     push(data) {
+       if (disabledUntil !== undefined) return
+       buffer.push(data)
+-      if (options.maxBatchSize !== "disabled" && buffer.length >= options.maxBatchSize) {
++      if (
++        options.exportInterval !== "disabled" && options.maxBatchSize !== "disabled" && buffer.length >= options.maxBatchSize
++      ) {
+         Fiber.runIn(runFork(runExport), scope)
+       }
+     }
+diff --git a/src/unstable/observability/OtlpLogger.ts b/src/unstable/observability/OtlpLogger.ts
+index a9ead3b5fa17d05ce82bdb98c551b427c9950aac..88410624e889bf3301d4a3c4f64a10ac3c85b508 100644
+--- a/src/unstable/observability/OtlpLogger.ts
++++ b/src/unstable/observability/OtlpLogger.ts
+@@ -31,7 +31,7 @@ export const make: (
+       readonly attributes?: Record<string, unknown>
+     } | undefined
+     readonly headers?: Headers.Input | undefined
+-    readonly exportInterval?: Duration.Input | undefined
++    readonly exportInterval?: Duration.Input | "disabled" | undefined
+     readonly maxBatchSize?: number | undefined
+     readonly shutdownTimeout?: Duration.Input | undefined
+     readonly excludeLogSpans?: boolean | undefined
+@@ -87,7 +87,7 @@ export const layer = (options: {
+     readonly attributes?: Record<string, unknown>
+   } | undefined
+   readonly headers?: Headers.Input | undefined
+-  readonly exportInterval?: Duration.Input | undefined
++  readonly exportInterval?: Duration.Input | "disabled" | undefined
+   readonly maxBatchSize?: number | undefined
+   readonly shutdownTimeout?: Duration.Input | undefined
+   readonly excludeLogSpans?: boolean | undefined
+diff --git a/src/unstable/observability/OtlpTracer.ts b/src/unstable/observability/OtlpTracer.ts
+index 09fc6c1cf9235a21a779c9296c51169e61f08924..440d70d0f8569f458905efcff7469793c01fcf45 100644
+--- a/src/unstable/observability/OtlpTracer.ts
++++ b/src/unstable/observability/OtlpTracer.ts
+@@ -33,7 +33,7 @@ export const make: (
+       readonly attributes?: Record<string, unknown>
+     } | undefined
+     readonly headers?: Headers.Input | undefined
+-    readonly exportInterval?: Duration.Input | undefined
++    readonly exportInterval?: Duration.Input | "disabled" | undefined
+     readonly maxBatchSize?: number | undefined
+     readonly context?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined
+     readonly shutdownTimeout?: Duration.Input | undefined
+@@ -110,7 +110,7 @@ export const layer: (options: {
+     readonly attributes?: Record<string, unknown>
+   } | undefined
+   readonly headers?: Headers.Input | undefined
+-  readonly exportInterval?: Duration.Input | undefined
++  readonly exportInterval?: Duration.Input | "disabled" | undefined
+   readonly maxBatchSize?: number | undefined
+   readonly context?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined
+   readonly shutdownTimeout?: Duration.Input | undefined

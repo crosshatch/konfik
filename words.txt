@@ -12,7 +12,6 @@ hyperdrive
 indexeddb
 indexeddb
 isready
-jaegertracing
 keypair
 kitlangton
 konfik
