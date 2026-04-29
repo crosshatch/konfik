@@ -50,13 +50,6 @@ index 13fb69bb0611452978525e6f08553e2445befdb5..5ef7f20d3b53d42b5c084b63698386e4
 + * @since 4.0.0
 + * @category Services
 + */
-<<<<<<< HEAD
-+declare const Exporters_base: Context.ServiceClass<Exporters, "effect/unstable/observability/OtlpExporter/Exporters", {
-+    readonly register: (exporter: Effect.Effect<void>) => Effect.Effect<void>;
-+    readonly flush: Effect.Effect<void>;
-+}>;
-=======
->>>>>>> 91f4716 (add effect otel patch for cf tracing)
 +export declare class Exporters extends Exporters_base {
 +}
 +/**
