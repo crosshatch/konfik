@@ -33,7 +33,7 @@ diff --git a/dist/unstable/observability/OtlpExporter.d.ts b/dist/unstable/obser
 index 13fb69bb0611452978525e6f08553e2445befdb5..5ef7f20d3b53d42b5c084b63698386e45c7a66bb 100644
 --- a/dist/unstable/observability/OtlpExporter.d.ts
 +++ b/dist/unstable/observability/OtlpExporter.d.ts
-@@ -1,9 +1,26 @@
+@@ -1,9 +1,31 @@
 +import * as Context from "../../Context.ts";
  import * as Duration from "../../Duration.ts";
  import * as Effect from "../../Effect.ts";
@@ -57,6 +57,11 @@ index 13fb69bb0611452978525e6f08553e2445befdb5..5ef7f20d3b53d42b5c084b63698386e4
 + * @category Layers
 + */
 +export declare const layerExporters: Layer.Layer<Exporters>;
++/**
++ * @since 4.0.0
++ * @category constructors
++ */
++export declare const flush: Effect.Effect<void>;
  /**
   * @since 4.0.0
   * @category Constructors
@@ -92,7 +97,7 @@ index a6362c6a9bb64448d2b5b0674151d8eb0e3be0e5..be4f2bab042b0ea2d6c189e2763b4ef4
  import * as Headers from "../../unstable/http/Headers.js";
  import * as HttpClient from "../../unstable/http/HttpClient.js";
  import * as HttpClientError from "../../unstable/http/HttpClientError.js";
-@@ -21,6 +24,25 @@ const policy = /*#__PURE__*/Schedule.forever.pipe(Schedule.passthrough, /*#__PUR
+@@ -21,6 +24,33 @@ const policy = /*#__PURE__*/Schedule.forever.pipe(Schedule.passthrough, /*#__PUR
    }
    return Effect.succeed(Duration.seconds(1));
  }));
@@ -115,6 +120,14 @@ index a6362c6a9bb64448d2b5b0674151d8eb0e3be0e5..be4f2bab042b0ea2d6c189e2763b4ef4
 +    })))
 +  };
 +}));
++/**
++ * @since 4.0.0
++ * @category constructors
++ */
++export const flush = /*#__PURE__*/Effect.serviceOption(Exporters).pipe(Effect.flatMap(Option.match({
++  onNone: () => Effect.void,
++  onSome: exporters => exporters.flush
++})));
  /**
   * @since 4.0.0
   * @category Constructors
@@ -271,7 +284,7 @@ index 7a61d926f0c5d3e58566457096e4081b44a35de5..31e28cd24d70dadf406b28b2c3024314
  import * as Headers from "../../unstable/http/Headers.ts"
  import * as HttpClient from "../../unstable/http/HttpClient.ts"
  import * as HttpClientError from "../../unstable/http/HttpClientError.ts"
-@@ -34,6 +37,38 @@ const policy = Schedule.forever.pipe(
+@@ -34,6 +37,51 @@ const policy = Schedule.forever.pipe(
    })
  )
  
@@ -305,6 +318,19 @@ index 7a61d926f0c5d3e58566457096e4081b44a35de5..31e28cd24d70dadf406b28b2c3024314
 +      )
 +    }
 +  })
++)
++
++/**
++ * @since 4.0.0
++ * @category constructors
++ */
++export const flush = Effect.serviceOption(Exporters).pipe(
++  Effect.flatMap(
++    Option.match({
++      onNone: () => Effect.void,
++      onSome: (exporters) => exporters.flush
++    })
++  )
 +)
 +
  /**
