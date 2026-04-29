@@ -10,6 +10,7 @@
     "@effect/platform-node": "catalog:",
     "@types/node": "catalog:",
     "dprint": "catalog:",
+    "effect": "catalog:",
     "oxlint": "catalog:",
     "ts-patch": "catalog:",
     "typescript": "catalog:"
