@@ -206,6 +206,79 @@ index 1307949a8ec37c07d450680f35666da5fe68b144..a9baf0492bf20465771fc1a66637bb0f
      readonly maxBatchSize?: number | undefined;
      readonly shutdownTimeout?: Duration.Input | undefined;
      readonly excludeLogSpans?: boolean | undefined;
+diff --git a/dist/unstable/observability/OtlpMetrics.d.ts b/dist/unstable/observability/OtlpMetrics.d.ts
+index 16c0f34419dd2748d31412b8171c11dbcb355a3f..5d4c532ce3cecf5cb32af044d46460048a59f02e 100644
+--- a/dist/unstable/observability/OtlpMetrics.d.ts
++++ b/dist/unstable/observability/OtlpMetrics.d.ts
+@@ -50,7 +50,7 @@ export declare const make: (options: {
+         readonly attributes?: Record<string, unknown>;
+     } | undefined;
+     readonly headers?: Headers.Input | undefined;
+-    readonly exportInterval?: Duration.Input | undefined;
++    readonly exportInterval?: Duration.Input | "disabled" | undefined;
+     readonly shutdownTimeout?: Duration.Input | undefined;
+     readonly temporality?: AggregationTemporality | undefined;
+ }) => Effect.Effect<void, never, HttpClient.HttpClient | OtlpSerialization | Scope.Scope>;
+@@ -66,7 +66,7 @@ export declare const layer: (options: {
+         readonly attributes?: Record<string, unknown>;
+     } | undefined;
+     readonly headers?: Headers.Input | undefined;
+-    readonly exportInterval?: Duration.Input | undefined;
++    readonly exportInterval?: Duration.Input | "disabled" | undefined;
+     readonly shutdownTimeout?: Duration.Input | undefined;
+     readonly temporality?: AggregationTemporality | undefined;
+ }) => Layer.Layer<never, never, HttpClient.HttpClient | OtlpSerialization>;
+diff --git a/dist/unstable/observability/Otlp.d.ts b/dist/unstable/observability/Otlp.d.ts
+index 351f94faf3716b0ba5ab57a2d8786e0e3de147af..4dd69d26620f3a64b502da5d711c32f4d41b58b1 100644
+--- a/dist/unstable/observability/Otlp.d.ts
++++ b/dist/unstable/observability/Otlp.d.ts
+@@ -22,10 +22,10 @@ export declare const layer: (options: {
+     readonly headers?: Headers.Input | undefined;
+     readonly maxBatchSize?: number | undefined;
+     readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined;
+-    readonly loggerExportInterval?: Duration.Input | undefined;
++    readonly loggerExportInterval?: Duration.Input | "disabled" | undefined;
+     readonly loggerExcludeLogSpans?: boolean | undefined;
+     readonly loggerMergeWithExisting?: boolean | undefined;
+-    readonly metricsExportInterval?: Duration.Input | undefined;
++    readonly metricsExportInterval?: Duration.Input | "disabled" | undefined;
+     readonly metricsTemporality?: AggregationTemporality | undefined;
+-    readonly tracerExportInterval?: Duration.Input | undefined;
++    readonly tracerExportInterval?: Duration.Input | "disabled" | undefined;
+     readonly shutdownTimeout?: Duration.Input | undefined;
+ }) => Layer.Layer<never, never, HttpClient.HttpClient | OtlpSerialization.OtlpSerialization>;
+ /**
+@@ -44,10 +44,10 @@ export declare const layerJson: (options: {
+     readonly headers?: Headers.Input | undefined;
+     readonly maxBatchSize?: number | undefined;
+     readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined;
+-    readonly loggerExportInterval?: Duration.Input | undefined;
++    readonly loggerExportInterval?: Duration.Input | "disabled" | undefined;
+     readonly loggerExcludeLogSpans?: boolean | undefined;
+     readonly loggerMergeWithExisting?: boolean | undefined;
+-    readonly metricsExportInterval?: Duration.Input | undefined;
++    readonly metricsExportInterval?: Duration.Input | "disabled" | undefined;
+     readonly metricsTemporality?: AggregationTemporality | undefined;
+-    readonly tracerExportInterval?: Duration.Input | undefined;
++    readonly tracerExportInterval?: Duration.Input | "disabled" | undefined;
+     readonly shutdownTimeout?: Duration.Input | undefined;
+ }) => Layer.Layer<never, never, HttpClient.HttpClient>;
+ /**
+@@ -66,10 +66,10 @@ export declare const layerProtobuf: (options: {
+     readonly headers?: Headers.Input | undefined;
+     readonly maxBatchSize?: number | undefined;
+     readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined;
+-    readonly loggerExportInterval?: Duration.Input | undefined;
++    readonly loggerExportInterval?: Duration.Input | "disabled" | undefined;
+     readonly loggerExcludeLogSpans?: boolean | undefined;
+     readonly loggerMergeWithExisting?: boolean | undefined;
+-    readonly metricsExportInterval?: Duration.Input | undefined;
++    readonly metricsExportInterval?: Duration.Input | "disabled" | undefined;
+     readonly metricsTemporality?: AggregationTemporality | undefined;
+-    readonly tracerExportInterval?: Duration.Input | undefined;
++    readonly tracerExportInterval?: Duration.Input | "disabled" | undefined;
+     readonly shutdownTimeout?: Duration.Input | undefined;
+ }) => Layer.Layer<never, never, HttpClient.HttpClient>;
 diff --git a/dist/unstable/observability/OtlpTracer.d.ts b/dist/unstable/observability/OtlpTracer.d.ts
 index 99fe84575aef41b88e5b9959cacab55c9be8ae10..f64a92608d098db2fa8f2d63b3b53af0bcc62292 100644
 --- a/dist/unstable/observability/OtlpTracer.d.ts
@@ -448,6 +521,79 @@ index a9ead3b5fa17d05ce82bdb98c551b427c9950aac..88410624e889bf3301d4a3c4f64a10ac
    readonly maxBatchSize?: number | undefined
    readonly shutdownTimeout?: Duration.Input | undefined
    readonly excludeLogSpans?: boolean | undefined
+diff --git a/src/unstable/observability/OtlpMetrics.ts b/src/unstable/observability/OtlpMetrics.ts
+index 9813228fc91756cd36f0f287a416d5ea63ce1b54..41fece81b400759182983320d66d2995916cbde8 100644
+--- a/src/unstable/observability/OtlpMetrics.ts
++++ b/src/unstable/observability/OtlpMetrics.ts
+@@ -60,7 +60,7 @@ export const make: (options: {
+     readonly attributes?: Record<string, unknown>
+   } | undefined
+   readonly headers?: Headers.Input | undefined
+-  readonly exportInterval?: Duration.Input | undefined
++  readonly exportInterval?: Duration.Input | "disabled" | undefined
+   readonly shutdownTimeout?: Duration.Input | undefined
+   readonly temporality?: AggregationTemporality | undefined
+ }) => Effect.Effect<
+@@ -440,7 +440,7 @@ export const layer = (options: {
+     readonly attributes?: Record<string, unknown>
+   } | undefined
+   readonly headers?: Headers.Input | undefined
+-  readonly exportInterval?: Duration.Input | undefined
++  readonly exportInterval?: Duration.Input | "disabled" | undefined
+   readonly shutdownTimeout?: Duration.Input | undefined
+   readonly temporality?: AggregationTemporality | undefined
+ }): Layer.Layer<never, never, HttpClient.HttpClient | OtlpSerialization> => Layer.effectDiscard(make(options))
+diff --git a/src/unstable/observability/Otlp.ts b/src/unstable/observability/Otlp.ts
+index 8f8507a4741a69ca7a9d77a27f32f0d820879ccf..fd5bcd232ce19c36d93c2b3e0bfb6fe6f90c7437 100644
+--- a/src/unstable/observability/Otlp.ts
++++ b/src/unstable/observability/Otlp.ts
+@@ -28,10 +28,10 @@ export const layer = (options: {
+   readonly headers?: Headers.Input | undefined
+   readonly maxBatchSize?: number | undefined
+   readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined
+-  readonly loggerExportInterval?: Duration.Input | undefined
++  readonly loggerExportInterval?: Duration.Input | "disabled" | undefined
+   readonly loggerExcludeLogSpans?: boolean | undefined
+   readonly loggerMergeWithExisting?: boolean | undefined
+-  readonly metricsExportInterval?: Duration.Input | undefined
++  readonly metricsExportInterval?: Duration.Input | "disabled" | undefined
+   readonly metricsTemporality?: AggregationTemporality | undefined
+-  readonly tracerExportInterval?: Duration.Input | undefined
++  readonly tracerExportInterval?: Duration.Input | "disabled" | undefined
+   readonly shutdownTimeout?: Duration.Input | undefined
+ }): Layer.Layer<never, never, HttpClient.HttpClient | OtlpSerialization.OtlpSerialization> => {
+   const base = HttpClientRequest.get(options.baseUrl)
+@@ -83,10 +83,10 @@ export const layerJson: (options: {
+   readonly headers?: Headers.Input | undefined
+   readonly maxBatchSize?: number | undefined
+   readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined
+-  readonly loggerExportInterval?: Duration.Input | undefined
++  readonly loggerExportInterval?: Duration.Input | "disabled" | undefined
+   readonly loggerExcludeLogSpans?: boolean | undefined
+   readonly loggerMergeWithExisting?: boolean | undefined
+-  readonly metricsExportInterval?: Duration.Input | undefined
++  readonly metricsExportInterval?: Duration.Input | "disabled" | undefined
+   readonly metricsTemporality?: AggregationTemporality | undefined
+-  readonly tracerExportInterval?: Duration.Input | undefined
++  readonly tracerExportInterval?: Duration.Input | "disabled" | undefined
+   readonly shutdownTimeout?: Duration.Input | undefined
+ }) => Layer.Layer<never, never, HttpClient.HttpClient> = flow(layer, Layer.provide(OtlpSerialization.layerJson))
+ 
+@@ -106,10 +106,10 @@ export const layerProtobuf: (options: {
+   readonly headers?: Headers.Input | undefined
+   readonly maxBatchSize?: number | undefined
+   readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined
+-  readonly loggerExportInterval?: Duration.Input | undefined
++  readonly loggerExportInterval?: Duration.Input | "disabled" | undefined
+   readonly loggerExcludeLogSpans?: boolean | undefined
+   readonly loggerMergeWithExisting?: boolean | undefined
+-  readonly metricsExportInterval?: Duration.Input | undefined
++  readonly metricsExportInterval?: Duration.Input | "disabled" | undefined
+   readonly metricsTemporality?: AggregationTemporality | undefined
+-  readonly tracerExportInterval?: Duration.Input | undefined
++  readonly tracerExportInterval?: Duration.Input | "disabled" | undefined
+   readonly shutdownTimeout?: Duration.Input | undefined
+ }) => Layer.Layer<never, never, HttpClient.HttpClient> = flow(layer, Layer.provide(OtlpSerialization.layerProtobuf))
 diff --git a/src/unstable/observability/OtlpTracer.ts b/src/unstable/observability/OtlpTracer.ts
 index 09fc6c1cf9235a21a779c9296c51169e61f08924..440d70d0f8569f458905efcff7469793c01fcf45 100644
 --- a/src/unstable/observability/OtlpTracer.ts
