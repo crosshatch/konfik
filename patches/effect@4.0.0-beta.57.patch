@@ -232,7 +232,7 @@ diff --git a/dist/unstable/observability/Otlp.d.ts b/dist/unstable/observability
 index 351f94faf3716b0ba5ab57a2d8786e0e3de147af..4dd69d26620f3a64b502da5d711c32f4d41b58b1 100644
 --- a/dist/unstable/observability/Otlp.d.ts
 +++ b/dist/unstable/observability/Otlp.d.ts
-@@ -22,10 +22,10 @@ export declare const layer: (options: {
+@@ -22,12 +22,12 @@ export declare const layer: (options: {
      readonly headers?: Headers.Input | undefined;
      readonly maxBatchSize?: number | undefined;
      readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined;
@@ -248,7 +248,7 @@ index 351f94faf3716b0ba5ab57a2d8786e0e3de147af..4dd69d26620f3a64b502da5d711c32f4
      readonly shutdownTimeout?: Duration.Input | undefined;
  }) => Layer.Layer<never, never, HttpClient.HttpClient | OtlpSerialization.OtlpSerialization>;
  /**
-@@ -44,10 +44,10 @@ export declare const layerJson: (options: {
+@@ -44,12 +44,12 @@ export declare const layerJson: (options: {
      readonly headers?: Headers.Input | undefined;
      readonly maxBatchSize?: number | undefined;
      readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined;
@@ -264,7 +264,7 @@ index 351f94faf3716b0ba5ab57a2d8786e0e3de147af..4dd69d26620f3a64b502da5d711c32f4
      readonly shutdownTimeout?: Duration.Input | undefined;
  }) => Layer.Layer<never, never, HttpClient.HttpClient>;
  /**
-@@ -66,10 +66,10 @@ export declare const layerProtobuf: (options: {
+@@ -66,11 +66,11 @@ export declare const layerProtobuf: (options: {
      readonly headers?: Headers.Input | undefined;
      readonly maxBatchSize?: number | undefined;
      readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined;
@@ -547,7 +547,7 @@ diff --git a/src/unstable/observability/Otlp.ts b/src/unstable/observability/Otl
 index 8f8507a4741a69ca7a9d77a27f32f0d820879ccf..fd5bcd232ce19c36d93c2b3e0bfb6fe6f90c7437 100644
 --- a/src/unstable/observability/Otlp.ts
 +++ b/src/unstable/observability/Otlp.ts
-@@ -28,10 +28,10 @@ export const layer = (options: {
+@@ -28,12 +28,12 @@ export const layer = (options: {
    readonly headers?: Headers.Input | undefined
    readonly maxBatchSize?: number | undefined
    readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined
@@ -563,7 +563,7 @@ index 8f8507a4741a69ca7a9d77a27f32f0d820879ccf..fd5bcd232ce19c36d93c2b3e0bfb6fe6
    readonly shutdownTimeout?: Duration.Input | undefined
  }): Layer.Layer<never, never, HttpClient.HttpClient | OtlpSerialization.OtlpSerialization> => {
    const base = HttpClientRequest.get(options.baseUrl)
-@@ -83,10 +83,10 @@ export const layerJson: (options: {
+@@ -83,12 +83,12 @@ export const layerJson: (options: {
    readonly headers?: Headers.Input | undefined
    readonly maxBatchSize?: number | undefined
    readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined
@@ -579,7 +579,7 @@ index 8f8507a4741a69ca7a9d77a27f32f0d820879ccf..fd5bcd232ce19c36d93c2b3e0bfb6fe6
    readonly shutdownTimeout?: Duration.Input | undefined
  }) => Layer.Layer<never, never, HttpClient.HttpClient> = flow(layer, Layer.provide(OtlpSerialization.layerJson))
  
-@@ -106,10 +106,10 @@ export const layerProtobuf: (options: {
+@@ -106,11 +106,11 @@ export const layerProtobuf: (options: {
    readonly headers?: Headers.Input | undefined
    readonly maxBatchSize?: number | undefined
    readonly tracerContext?: (<X>(primitive: Tracer.EffectPrimitive<X>, span: Tracer.AnySpan) => X) | undefined
