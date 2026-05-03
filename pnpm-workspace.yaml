@@ -10,8 +10,8 @@ catalog:
   diff: ^8.0.3
   dprint: ^0.54.0
   effect: ^4.0.0-beta.57
-  oxlint: ^1.60.0
-  oxfmt: ^0.42.0
+  oxlint: ^1.62.0
+  oxfmt: ^0.47.0
   ts-patch: ^3.3.0
   typescript: ^6.0.2
   yaml: ^2.8.3

@@ -1,9 +1,9 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "semi": false,
-  "experimentalSortPackageJson": {},
+  "sortPackageJson": {},
   "ignorePatterns": ["repos/**", "**/*.gen.ts"],
-  "experimentalSortImports": {},
-  "experimentalTailwindcss": { "functions": ["cn"] },
+  "sortImports": {},
+  "sortTailwindcss": { "functions": ["cn"] },
   "proseWrap": "always",
 }

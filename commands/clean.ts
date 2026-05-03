@@ -1,6 +1,7 @@
+import { glob } from "node:fs/promises"
+
 import { FileSystem, Path, Console, Effect } from "effect"
 import { Command, Flag } from "effect/unstable/cli"
-import { glob } from "node:fs/promises"
 
 export const clean = Command.make("clean", {
   ignore: Flag.string("ignore").pipe(Flag.atLeast(0)),
