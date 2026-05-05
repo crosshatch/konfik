@@ -49,3 +49,5 @@ vocs
 webauthn
 widgeting
 workerd
+hnsw
+lintignore
