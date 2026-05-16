@@ -11,22 +11,21 @@ export const clean = Command.make("clean", {
       const packages = yield* Effect.promise(() => Array.fromAsync(glob("**/package.json", { exclude: ignore })))
       const path = yield* Path.Path
       const fs = yield* FileSystem.FileSystem
-      yield* Effect.all(
-        packages.map(
-          Effect.fn(function* (packageJsonPath: string) {
-            const dir = path.dirname(packageJsonPath)
-            yield* Console.log(`Cleaning "${dir}"`)
-            yield* Effect.all(
-              ["tsconfig.tsbuildinfo", "dist", "node_modules", ".tanstack", ".turbo"].map((v) =>
-                fs.remove(path.join(dir, v), {
-                  recursive: true,
-                  force: true,
-                }),
-              ),
-              { concurrency: "unbounded" },
-            )
-          }),
-        ),
+      yield* Effect.forEach(
+        packages,
+        Effect.fn(function* (packageJsonPath: string) {
+          const dir = path.dirname(packageJsonPath)
+          yield* Console.log(`Cleaning "${dir}"`)
+          yield* Effect.forEach(
+            ["tsconfig.tsbuildinfo", "dist", "node_modules", ".tanstack", ".turbo"],
+            (v) =>
+              fs.remove(path.join(dir, v), {
+                recursive: true,
+                force: true,
+              }),
+            { concurrency: "unbounded" },
+          )
+        }),
         { concurrency: "unbounded" },
       )
     }),

@@ -51,3 +51,4 @@ widgeting
 workerd
 hnsw
 lintignore
+lmnl
