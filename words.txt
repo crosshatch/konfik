@@ -52,3 +52,7 @@ workerd
 hnsw
 lintignore
 lmnl
+mobilenext
+mobilemcp
+planetscale
+toolkits

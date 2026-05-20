@@ -15,8 +15,8 @@ command = "pnpm"
 args = ["exec", "oxlint", "--lsp"]
 
 [language-server.oxfmt]
-command = "oxfmt"
-args = ["--lsp"]
+command = "pnpm"
+args = ["exec", "oxfmt", "--lsp", "--config", "./konfik/.oxfmtrc.jsonc"]
 
 [language-server.emmet]
 command = "emmet-language-server"
