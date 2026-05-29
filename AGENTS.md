@@ -2,11 +2,8 @@
 
 - Ensure that you're using the correct Effect primitives. Always refer to [the Effect source
   code][./repos/effect](./repos/effect).
-- If you run into any confusion related to the workerd environment or Cloudflare more generally, refer to the following
-  source code:
-  - [workerd](./repos/workerd)
-  - [workers-sdk](./repos/workers-sdk)
-  - [agents-sdk](./repos/agents)
+- If you run into any library/environment/tool confusion, various (likely-relevant) repos are mounted at ./repos –– grep
+  through the source.
 
 ## IMPORTANT
 
@@ -29,3 +26,7 @@
   ```
 
   > This approach ensures that the OTEL traces and logs can be correlated to the source file from which they originate.
+
+## TIPS
+
+- If you see a type error related to stable type ordering, run `pnpm clean && pnpm i && pnpm build`.
