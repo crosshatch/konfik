@@ -10,7 +10,6 @@ catalog:
   "@effect/language-service": 0.85.1
   "@effect/platform-node": ^4.0.0-beta.57
   "@types/node": ^25.6.0
-  alchemy: 2.0.0-beta.46
   diff: ^8.0.3
   dprint: ^0.54.0
   effect: 4.0.0-beta.66

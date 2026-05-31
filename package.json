@@ -9,7 +9,6 @@
     "@effect/language-service": "catalog:",
     "@effect/platform-node": "catalog:",
     "@types/node": "catalog:",
-    "alchemy": "catalog:",
     "dprint": "catalog:",
     "effect": "catalog:",
     "oxfmt": "catalog:",
