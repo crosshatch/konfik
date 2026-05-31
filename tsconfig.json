@@ -1,4 +1,4 @@
 {
   "extends": "./tsconfig.base",
-  "include": ["commands", "main.ts"]
+  "include": ["alchemy", "commands", "main.ts"]
 }

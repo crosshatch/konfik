@@ -3,17 +3,28 @@ packages:
 allowBuilds:
   dprint: true
   msgpackr-extract: true
+  workerd: false
 
 catalog:
   "@changesets/cli": ^2.30.0
   "@effect/language-service": 0.85.1
   "@effect/platform-node": ^4.0.0-beta.57
   "@types/node": ^25.6.0
+  alchemy: 2.0.0-beta.46
   diff: ^8.0.3
   dprint: ^0.54.0
-  effect: ^4.0.0-beta.57
+  effect: 4.0.0-beta.66
   oxfmt: ^0.48.0
   oxlint: ^1.62.0
   ts-patch: ^3.3.0
   typescript: ^6.0.2
   yaml: ^2.8.3
+
+minimumReleaseAgeExclude:
+  - "@distilled.cloud/aws@0.22.2"
+  - "@distilled.cloud/axiom@0.22.2"
+  - "@distilled.cloud/cloudflare@0.22.2"
+  - "@distilled.cloud/core@0.22.2"
+  - "@distilled.cloud/neon@0.22.2"
+  - "@distilled.cloud/planetscale@0.22.2"
+  - alchemy@2.0.0-beta.46

@@ -1,0 +1,126 @@
+diff --git a/src/Cloudflare/SecretsStore/Secret.ts b/src/Cloudflare/SecretsStore/Secret.ts
+--- a/src/Cloudflare/SecretsStore/Secret.ts
++++ b/src/Cloudflare/SecretsStore/Secret.ts
+@@ -54,6 +54,12 @@ export type Secret = Resource<
+   Providers
+ >;
+ 
++export const isSecret = (value: unknown): value is Secret =>
++  typeof value === "object" &&
++  value !== null &&
++  "Type" in value &&
++  value.Type === "Cloudflare.SecretsStore.Secret";
++
+ /**
+  * A single secret stored inside a Cloudflare Secrets Store.
+  *
+diff --git a/src/Cloudflare/Workers/WorkerAsyncBindings.ts b/src/Cloudflare/Workers/WorkerAsyncBindings.ts
+--- a/src/Cloudflare/Workers/WorkerAsyncBindings.ts
++++ b/src/Cloudflare/Workers/WorkerAsyncBindings.ts
+@@ -19,6 +19,7 @@ import { isImages } from "../Images/Images.ts";
+ import { isKVNamespace } from "../KV/KVNamespace.ts";
+ import { isQueue } from "../Queue/Queue.ts";
+ import { isR2Bucket } from "../R2/R2Bucket.ts";
++import { isSecret } from "../SecretsStore/Secret.ts";
+ import { isVectorizeIndex } from "../Vectorize/VectorizeIndex.ts";
+ import { isAssets } from "./Assets.ts";
+ import { isDurableObjectNamespaceLike } from "./DurableObjectNamespace.ts";
+@@ -197,6 +198,13 @@ const toBinding = (
+       name: bindingName,
+       indexName: binding.indexName,
+     };
++  } else if (isSecret(binding)) {
++    return {
++      type: "secrets_store_secret",
++      name: bindingName,
++      secretName: binding.secretName,
++      storeId: binding.storeId,
++    };
+   } else {
+     return {
+       type: "json",
+diff --git a/src/Cloudflare/Workers/WorkerBinding.ts b/src/Cloudflare/Workers/WorkerBinding.ts
+--- a/src/Cloudflare/Workers/WorkerBinding.ts
++++ b/src/Cloudflare/Workers/WorkerBinding.ts
+@@ -17,6 +17,7 @@ import { Images } from "../Images/Images.ts";
+ import type { KVNamespace } from "../KV/KVNamespace.ts";
+ import type { Queue } from "../Queue/Queue.ts";
+ import type { R2Bucket } from "../R2/R2Bucket.ts";
++import type { Secret } from "../SecretsStore/Secret.ts";
+ import type { VectorizeIndex } from "../Vectorize/VectorizeIndex.ts";
+ import type { Assets } from "./Assets.ts";
+ import type { DurableObjectNamespaceLike } from "./DurableObjectNamespace.ts";
+@@ -51,6 +52,7 @@ export type WorkerBindingResource =
+   | BrowserRendering
+   | Images
+   | Hyperdrive
++  | Secret
+   | VectorizeIndex
+   | Worker
+   | DurableObjectNamespaceLike<any>;
+diff --git a/lib/Cloudflare/SecretsStore/Secret.js b/lib/Cloudflare/SecretsStore/Secret.js
+--- a/lib/Cloudflare/SecretsStore/Secret.js
++++ b/lib/Cloudflare/SecretsStore/Secret.js
+@@ -10,3 +10,7 @@ import * as Provider from "../../Provider.js";
+ import { Resource } from "../../Resource.js";
+ import { SecretBinding } from "./SecretBinding.js";
++export const isSecret = (value) => typeof value === "object" &&
++    value !== null &&
++    "Type" in value &&
++    value.Type === "Cloudflare.SecretsStore.Secret";
+ /**
+diff --git a/lib/Cloudflare/SecretsStore/Secret.d.ts b/lib/Cloudflare/SecretsStore/Secret.d.ts
+--- a/lib/Cloudflare/SecretsStore/Secret.d.ts
++++ b/lib/Cloudflare/SecretsStore/Secret.d.ts
+@@ -40,6 +40,7 @@ export type Secret = Resource<"Cloudflare.SecretsStore.Secret", StoreSecretProps,
+     scopes: string[];
+     comment: string | undefined;
+ }, never, Providers>;
++export declare const isSecret: (value: unknown) => value is Secret;
+ /**
+  * A single secret stored inside a Cloudflare Secrets Store.
+  *
+diff --git a/lib/Cloudflare/Workers/WorkerAsyncBindings.js b/lib/Cloudflare/Workers/WorkerAsyncBindings.js
+--- a/lib/Cloudflare/Workers/WorkerAsyncBindings.js
++++ b/lib/Cloudflare/Workers/WorkerAsyncBindings.js
+@@ -16,6 +16,7 @@ import { isKVNamespace } from "../KV/KVNamespace.js";
+ import { isQueue } from "../Queue/Queue.js";
+ import { isR2Bucket } from "../R2/R2Bucket.js";
++import { isSecret } from "../SecretsStore/Secret.js";
+ import { isVectorizeIndex } from "../Vectorize/VectorizeIndex.js";
+ import { isAssets } from "./Assets.js";
+ import { isDurableObjectNamespaceLike } from "./DurableObjectNamespace.js";
+ import { isWorker } from "./Worker.js";
+@@ -186,6 +187,14 @@ const toBinding = (bindingName, binding) => {
+             indexName: binding.indexName,
+         };
+     }
++    else if (isSecret(binding)) {
++        return {
++            type: "secrets_store_secret",
++            name: bindingName,
++            secretName: binding.secretName,
++            storeId: binding.storeId,
++        };
++    }
+     else {
+         return {
+             type: "json",
+diff --git a/lib/Cloudflare/Workers/WorkerBinding.d.ts b/lib/Cloudflare/Workers/WorkerBinding.d.ts
+--- a/lib/Cloudflare/Workers/WorkerBinding.d.ts
++++ b/lib/Cloudflare/Workers/WorkerBinding.d.ts
+@@ -17,12 +17,13 @@ import type { KVNamespace } from "../KV/KVNamespace.ts";
+ import type { Queue } from "../Queue/Queue.ts";
+ import type { R2Bucket } from "../R2/R2Bucket.ts";
+ import type { VectorizeIndex } from "../Vectorize/VectorizeIndex.ts";
++import type { Secret } from "../SecretsStore/Secret.ts";
+ import type { Assets } from "./Assets.ts";
+ import type { DurableObjectNamespaceLike } from "./DurableObjectNamespace.ts";
+ import { Worker } from "./Worker.ts";
+ export type WorkerBinding = Exclude<workers.PutScriptRequest["metadata"]["bindings"], undefined>[number];
+ export type WorkerSettingsBinding = Exclude<workers.GetScriptScriptAndVersionSettingResponse["bindings"], null | undefined>[number];
+-export type WorkerBindingResource = Json | Redacted.Redacted<Json> | Config.Config<Json> | Assets | R2Bucket | D1Database | KVNamespace | Queue | AiGateway | AnalyticsEngineDataset | SendEmail | Artifacts | BrowserRendering | Images | Hyperdrive | VectorizeIndex | Worker | DurableObjectNamespaceLike<any>;
++export type WorkerBindingResource = Json | Redacted.Redacted<Json> | Config.Config<Json> | Assets | R2Bucket | D1Database | KVNamespace | Queue | AiGateway | AnalyticsEngineDataset | SendEmail | Artifacts | BrowserRendering | Images | Hyperdrive | Secret | VectorizeIndex | Worker | DurableObjectNamespaceLike<any>;
+ export type WorkerBindings = {
+     [bindingName in string]: WorkerBindingResource;
+ };

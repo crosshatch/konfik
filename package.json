@@ -9,6 +9,7 @@
     "@effect/language-service": "catalog:",
     "@effect/platform-node": "catalog:",
     "@types/node": "catalog:",
+    "alchemy": "catalog:",
     "dprint": "catalog:",
     "effect": "catalog:",
     "oxfmt": "catalog:",
@@ -16,5 +17,5 @@
     "ts-patch": "catalog:",
     "typescript": "catalog:"
   },
-  "packageManager": "pnpm@10.33.0"
+  "packageManager": "pnpm@11.5.0"
 }
