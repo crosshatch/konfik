@@ -12,17 +12,18 @@
 - An ongoing goal of ours is to ensure this repo is instrumented with optimal tracing and logging.
 
   ```ts
-  import * as Spanner from "liminal-util/Spanner"
-
-  const span = Spanner.make(import.meta.url)
+  import * as Boundary from "liminal-util/Boundary"
 
   const example1 = Effect.gen(function* () {
     // ...
-  }).pipe(span("example-1"))
+  }).pipe(Boundary.span("example-1", import.meta.url))
 
-  const example2 = Effect.fnUntraced(function* () {
-    // ...
-  }, span("example-2))
+  const example2 = Effect.fnUntraced(
+    function* () {
+      // ...
+    },
+    Boundary.span("example-2", import.meta.url),
+  )
   ```
 
   > This approach ensures that the OTEL traces and logs can be correlated to the source file from which they originate.
