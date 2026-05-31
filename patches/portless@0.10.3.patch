@@ -1,0 +1,183 @@
+diff --git a/dist/chunk-EZJWUTUA.js b/dist/chunk-EZJWUTUA.js
+--- a/dist/chunk-EZJWUTUA.js
++++ b/dist/chunk-EZJWUTUA.js
+@@ -1169,18 +1169,19 @@ function collectBinPaths(cwd) {
+   }
+   return dirs;
+ }
+-function augmentedPath(env) {
++function augmentedPath(env, cwd = process.cwd()) {
+   const source = env ?? process.env;
+   const base = source.PATH ?? source.Path ?? "";
+-  const bins = collectBinPaths(process.cwd());
++  const bins = collectBinPaths(cwd);
+   const nodeBin = path2.dirname(process.execPath);
+   const allBins = [...bins, nodeBin];
+   return allBins.join(path2.delimiter) + path2.delimiter + base;
+ }
+ function spawnCommand(commandArgs, options) {
++  const cwd = options?.cwd;
+   const env = {
+     ...options?.env ?? process.env,
+-    PATH: augmentedPath(options?.env)
++    PATH: augmentedPath(options?.env, cwd)
+   };
+   if (isWindows2) {
+     for (const key of Object.keys(env)) {
+@@ -1191,10 +1192,12 @@ function spawnCommand(commandArgs, options) {
+   }
+   const child = isWindows2 ? spawn("cmd.exe", ["/d", "/s", "/c", commandArgs.join(" ")], {
+     stdio: "inherit",
+-    env
++    env,
++    cwd
+   }) : spawn("/bin/sh", ["-c", commandArgs.map(shellEscape).join(" ")], {
+     stdio: "inherit",
+-    env
++    env,
++    cwd
+   });
+   let exiting = false;
+   const cleanup = () => {
+diff --git a/dist/cli.js b/dist/cli.js
+--- a/dist/cli.js
++++ b/dist/cli.js
+@@ -1683,7 +1683,7 @@ function printRoutes(routes, proxyPort, tls2) {
+   }
+   console.log();
+ }
+-async function runApp(initialStore, proxyPort, stateDir, name, commandArgs, tls2, tld, force, autoInfo, desiredPort, lanMode = false, lanIp) {
++async function runApp(initialStore, proxyPort, stateDir, name, commandArgs, tls2, tld, force, autoInfo, desiredPort, lanMode = false, lanIp, cwd) {
+   let store = initialStore;
+   console.log(chalk.blue.bold(`
+ portless
+@@ -1905,6 +1905,7 @@ ${caFragment} ${commandArgs.join(" ")}
+     )
+   );
+   spawnCommand(commandArgs, {
++    cwd,
+     env: {
+       ...process.env,
+       PORT: port.toString(),
+@@ -1951,6 +1952,7 @@ function parseRunArgs(args) {
+   let force = false;
+   let appPort;
+   let name;
++  let cwd;
+   let i = 0;
+   while (i < args.length && args[i].startsWith("-")) {
+     if (args[i] === "--") {
+@@ -1967,6 +1969,7 @@ ${colors_default.bold("Options:")}
+   --name <name>          Override the inferred base name (worktree prefix still applies)
+   --force                Kill the existing process and take over its route
+   --app-port <number>    Use a fixed port for the app (skip auto-assignment)
++  --cwd <dir>            Run the command from a different working directory
+   --help, -h             Show this help
+ 
+ ${colors_default.bold("Name inference (in order):")}
+@@ -1983,6 +1986,7 @@ ${colors_default.bold("Examples:")}
+   portless run --name myapp next dev  # -> https://myapp.localhost
+   portless run vite dev               # -> https://<project>.localhost
+   portless run --app-port 3000 pnpm start
++  portless app --cwd ../.. alchemy dev stacks/app.ts
+ `);
+       process.exit(0);
+     } else if (args[i] === "--force") {
+@@ -1990,6 +1994,13 @@ ${colors_default.bold("Examples:")}
+     } else if (args[i] === "--app-port") {
+       i++;
+       appPort = parseAppPort(args[i]);
++    } else if (args[i] === "--cwd") {
++      i++;
++      if (!args[i] || args[i].startsWith("-")) {
++        console.error(colors_default.red("Error: --cwd requires a directory."));
++        process.exit(1);
++      }
++      cwd = path4.resolve(args[i]);
+     } else if (args[i] === "--name") {
+       i++;
+       if (!args[i] || args[i].startsWith("-")) {
+@@ -2000,17 +2011,18 @@ ${colors_default.bold("Examples:")}
+       name = args[i];
+     } else {
+       console.error(colors_default.red(`Error: Unknown flag "${args[i]}".`));
+-      console.error(colors_default.blue("Known flags: --name, --force, --app-port, --help"));
++      console.error(colors_default.blue("Known flags: --name, --force, --app-port, --cwd, --help"));
+       process.exit(1);
+     }
+     i++;
+   }
+   if (!appPort) appPort = appPortFromEnv();
+-  return { force, appPort, name, commandArgs: args.slice(i) };
++  return { force, appPort, name, cwd, commandArgs: args.slice(i) };
+ }
+ function parseAppArgs(args) {
+   let force = false;
+   let appPort;
++  let cwd;
+   let i = 0;
+   while (i < args.length && args[i].startsWith("-")) {
+     if (args[i] === "--") {
+@@ -2021,9 +2033,16 @@ function parseAppArgs(args) {
+     } else if (args[i] === "--app-port") {
+       i++;
+       appPort = parseAppPort(args[i]);
++    } else if (args[i] === "--cwd") {
++      i++;
++      if (!args[i] || args[i].startsWith("-")) {
++        console.error(colors_default.red("Error: --cwd requires a directory."));
++        process.exit(1);
++      }
++      cwd = path4.resolve(args[i]);
+     } else {
+       console.error(colors_default.red(`Error: Unknown flag "${args[i]}".`));
+-      console.error(colors_default.blue("Known flags: --force, --app-port"));
++      console.error(colors_default.blue("Known flags: --force, --app-port, --cwd"));
+       process.exit(1);
+     }
+     i++;
+@@ -2039,15 +2058,22 @@ function parseAppArgs(args) {
+     } else if (args[i] === "--app-port") {
+       i++;
+       appPort = parseAppPort(args[i]);
++    } else if (args[i] === "--cwd") {
++      i++;
++      if (!args[i] || args[i].startsWith("-")) {
++        console.error(colors_default.red("Error: --cwd requires a directory."));
++        process.exit(1);
++      }
++      cwd = path4.resolve(args[i]);
+     } else {
+       console.error(colors_default.red(`Error: Unknown flag "${args[i]}".`));
+-      console.error(colors_default.blue("Known flags: --force, --app-port"));
++      console.error(colors_default.blue("Known flags: --force, --app-port, --cwd"));
+       process.exit(1);
+     }
+     i++;
+   }
+   if (!appPort) appPort = appPortFromEnv();
+-  return { force, appPort, name, commandArgs: args.slice(i) };
++  return { force, appPort, name, cwd, commandArgs: args.slice(i) };
+ }
+ function printHelp() {
+   console.log(`
+@@ -3007,7 +3033,8 @@ async function handleRunMode(args) {
+     { nameSource, prefix: worktree?.prefix, prefixSource: worktree?.source },
+     parsed.appPort,
+     lanMode,
+-    lanIp
++    lanIp,
++    parsed.cwd
+   );
+ }
+ async function handleNamedMode(args) {
+@@ -3037,7 +3064,8 @@ async function handleNamedMode(args) {
+     void 0,
+     parsed.appPort,
+     lanMode,
+-    lanIp
++    lanIp,
++    parsed.cwd
+   );
+ }
+ async function main() {
