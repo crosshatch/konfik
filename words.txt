@@ -60,3 +60,4 @@ keypairs
 encrypter
 keyid
 msgpackr
+alchemicals

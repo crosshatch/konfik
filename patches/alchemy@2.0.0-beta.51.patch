@@ -1,0 +1,32 @@
+diff --git a/src/Build/Command.ts b/src/Build/Command.ts
+--- a/src/Build/Command.ts
++++ b/src/Build/Command.ts
+@@ -134,6 +134,12 @@ export const CommandProvider = () =>
+           if (!output) {
+             return undefined;
+           }
++          const outputPath = getOutputPath(news);
++          const outputExists = yield* fs.exists(outputPath);
++          if (!outputExists) {
++            return { action: "update" as const };
++          }
++
+           const newHash = yield* hashDirectory(news);
+           if (newHash !== output.hash) {
+             return { action: "update" as const };
+diff --git a/lib/Build/Command.js b/lib/Build/Command.js
+--- a/lib/Build/Command.js
++++ b/lib/Build/Command.js
+@@ -77,6 +77,12 @@ export const CommandProvider = () => Provider.effect(Command, Effect.gen(function
+             if (!output) {
+                 return undefined;
+             }
++            const outputPath = getOutputPath(news);
++            const outputExists = yield* fs.exists(outputPath);
++            if (!outputExists) {
++                return { action: "update" };
++            }
++
+             const newHash = yield* hashDirectory(news);
+             if (newHash !== output.hash) {
+                 return { action: "update" };
