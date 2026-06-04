@@ -19,3 +19,7 @@ allowBuilds:
   dprint: true
   msgpackr-extract: true
   workerd: false
+
+minimumReleaseAgeExclude:
+  - "@distilled.cloud/*"
+  - alchemy@2.0.0-beta.46
