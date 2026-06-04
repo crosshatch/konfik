@@ -1,0 +1,35 @@
+name: Alchemy
+description: Deploy or destroy an Alchemy stage
+
+inputs:
+  command:
+    required: true
+    description: deploy or destroy
+  working-directory:
+    required: false
+    default: .
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve environment
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "STAGE=pr-${{ github.event.number }}" >> "$GITHUB_ENV"
+          echo "PULL_REQUEST=${{ github.event.number }}" >> "$GITHUB_ENV"
+        else
+          echo "STAGE=prod" >> "$GITHUB_ENV"
+        fi
+
+    - name: Deploy
+      if: inputs.command == 'deploy'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: pnpm exec alchemy deploy --stage "$STAGE" --yes
+
+    - name: Destroy
+      if: inputs.command == 'destroy'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: pnpm exec alchemy destroy --stage "$STAGE" --yes
