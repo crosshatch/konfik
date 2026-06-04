@@ -1,0 +1,78 @@
+name: Alchemize
+
+on:
+  workflow_call:
+    inputs:
+      cloudflare-account-id:
+        required: true
+        type: string
+      working-directory:
+        required: false
+        type: string
+        default: .
+      environment:
+        required: false
+        type: string
+        default: deploy
+    secrets:
+      CLOUDFLARE_API_TOKEN:
+        required: true
+      github-token:
+        required: true
+
+jobs:
+  environment:
+    runs-on: ubuntu-latest
+    outputs:
+      stage: ${{ steps.resolve.outputs.stage }}
+      pull-request: ${{ steps.resolve.outputs.pull-request }}
+    steps:
+      - id: resolve
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "stage=pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+            echo "pull-request=${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "stage=prod" >> "$GITHUB_OUTPUT"
+            echo "pull-request=" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs: environment
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v6
+      - run: "git -c url.https://github.com/.insteadOf=git@github.com: submodule update --init konfik"
+      - uses: ./konfik/.github/actions/configure_environment
+      - run: pnpm build
+      - name: Deploy
+        working-directory: ${{ inputs.working-directory }}
+        run: pnpm exec alchemy deploy --stage "$STAGE" --yes
+        env:
+          STAGE: ${{ needs.environment.outputs.stage }}
+          PULL_REQUEST: ${{ needs.environment.outputs.pull-request }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ inputs['cloudflare-account-id'] }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets['github-token'] }}
+
+  cleanup:
+    needs: environment
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v6
+      - run: "git -c url.https://github.com/.insteadOf=git@github.com: submodule update --init konfik"
+      - uses: ./konfik/.github/actions/configure_environment
+      - name: Destroy
+        working-directory: ${{ inputs.working-directory }}
+        run: pnpm exec alchemy destroy --stage "$STAGE" --yes
+        env:
+          STAGE: ${{ needs.environment.outputs.stage }}
+          PULL_REQUEST: ${{ needs.environment.outputs.pull-request }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ inputs['cloudflare-account-id'] }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets['github-token'] }}
