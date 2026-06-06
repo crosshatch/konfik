@@ -15,8 +15,6 @@ runs:
         node-version: 22
     - shell: bash
       run: pnpm install --frozen-lockfile
-    - shell: bash
-      run: pnpm bin >> "$GITHUB_PATH"
     - if: inputs.playwright == 'true'
       shell: bash
       run: echo "PLAYWRIGHT_BROWSERS_PATH=${{ github.workspace }}/.cache/ms-playwright" >> "$GITHUB_ENV"
