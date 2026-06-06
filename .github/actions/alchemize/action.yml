@@ -9,10 +9,6 @@ inputs:
     description: Branch that deploys as the persistent prod stage and is never destroyed.
     required: false
     default: main
-  build-command:
-    description: Command to run before deploying or destroying. Leave empty to skip.
-    required: false
-    default: ""
 outputs:
   action:
     description: "The lifecycle action that ran: deploy, destroy, or skip."
@@ -57,10 +53,6 @@ runs:
         echo "stage=" >> "$GITHUB_OUTPUT"
         echo "pull-request=" >> "$GITHUB_OUTPUT"
         echo "action=skip" >> "$GITHUB_OUTPUT"
-
-    - if: ${{ steps.resolve.outputs.action != 'skip' && inputs.build-command != '' }}
-      shell: bash
-      run: ${{ inputs.build-command }}
 
     - if: ${{ steps.resolve.outputs.action == 'deploy' }}
       shell: bash
