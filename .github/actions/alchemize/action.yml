@@ -65,15 +65,23 @@ runs:
     - if: ${{ steps.resolve.outputs.action == 'deploy' }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: alchemy deploy --stage "$STAGE" --yes
+      run: |
+        if [ -n "$PULL_REQUEST_VALUE" ]; then
+          export PULL_REQUEST="$PULL_REQUEST_VALUE"
+        fi
+        alchemy deploy --stage "$STAGE" --yes
       env:
         STAGE: ${{ steps.resolve.outputs.stage }}
-        PULL_REQUEST: ${{ steps.resolve.outputs.pull-request }}
+        PULL_REQUEST_VALUE: ${{ steps.resolve.outputs.pull-request }}
 
     - if: ${{ steps.resolve.outputs.action == 'destroy' }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: alchemy destroy --stage "$STAGE" --yes
+      run: |
+        if [ -n "$PULL_REQUEST_VALUE" ]; then
+          export PULL_REQUEST="$PULL_REQUEST_VALUE"
+        fi
+        alchemy destroy --stage "$STAGE" --yes
       env:
         STAGE: ${{ steps.resolve.outputs.stage }}
-        PULL_REQUEST: ${{ steps.resolve.outputs.pull-request }}
+        PULL_REQUEST_VALUE: ${{ steps.resolve.outputs.pull-request }}
