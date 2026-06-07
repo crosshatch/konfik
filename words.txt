@@ -61,3 +61,5 @@ vocs
 webauthn
 widgeting
 workerd
+waku
+deadlinks
