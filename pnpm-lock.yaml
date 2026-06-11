@@ -7,11 +7,11 @@ settings:
 catalogs:
   default:
     '@effect/language-service':
-      specifier: 0.85.1
-      version: 0.85.1
+      specifier: 0.86.2
+      version: 0.86.2
     '@effect/platform-node':
-      specifier: ^4.0.0-beta.78
-      version: 4.0.0-beta.78
+      specifier: ^4.0.0-beta.79
+      version: 4.0.0-beta.79
     '@types/node':
       specifier: ^25.6.0
       version: 25.6.0
@@ -19,8 +19,8 @@ catalogs:
       specifier: ^0.54.0
       version: 0.54.0
     effect:
-      specifier: 4.0.0-beta.78
-      version: 4.0.0-beta.78
+      specifier: 4.0.0-beta.79
+      version: 4.0.0-beta.79
     oxfmt:
       specifier: ^0.48.0
       version: 0.48.0
@@ -40,10 +40,10 @@ importers:
     devDependencies:
       '@effect/language-service':
         specifier: 'catalog:'
-        version: 0.85.1
+        version: 0.86.2
       '@effect/platform-node':
         specifier: 'catalog:'
-        version: 4.0.0-beta.78(effect@4.0.0-beta.78)(ioredis@5.10.1)
+        version: 4.0.0-beta.79(effect@4.0.0-beta.79)(ioredis@5.10.1)
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -52,7 +52,7 @@ importers:
         version: 0.54.0
       effect:
         specifier: 'catalog:'
-        version: 4.0.0-beta.78
+        version: 4.0.0-beta.79
       oxfmt:
         specifier: 'catalog:'
         version: 0.48.0
@@ -130,21 +130,21 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@effect/language-service@0.85.1':
-    resolution: {integrity: sha512-EXnJjIy6zQ3nUO/MZ+ynWUb8B895KZPotd1++oTs9JjDkplwM7cb6zo8Zq2zU6piwq+KflO7amXbEfj1UMpHkw==}
+  '@effect/language-service@0.86.2':
+    resolution: {integrity: sha512-SaPln+8srOqDJDUwNTDmP5e+IYpEDr9+1epGznnsLqu8xvo6VnxyWARdeLpqvZJlb0Pgy9ca7ppqvvdWbHPXAg==}
     hasBin: true
 
-  '@effect/platform-node-shared@4.0.0-beta.78':
-    resolution: {integrity: sha512-mo0ddTPATyCMyqzQasYDL7+NI29vozoMplom+qu9f/onDTd4xG5hvEEfGxfL0Ljygui6keG/YE/E9OZVf2z5WA==}
+  '@effect/platform-node-shared@4.0.0-beta.79':
+    resolution: {integrity: sha512-wWOFCQgQWvPaDt/wBH6xTURMc0t8kvlenT4GcDVck6kR4+odHJG5d+qfBM583d7BtuYuab/vbJrFAEKGhbSinQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: ^4.0.0-beta.78
+      effect: ^4.0.0-beta.79
 
-  '@effect/platform-node@4.0.0-beta.78':
-    resolution: {integrity: sha512-8ONrIS5/R9dq+0BJ6v3kUXNEkfjU6S3GzIYCH5gmHdiriRvIoBhXYNAITfRvZpfx1JPrKuP70cHyuQDjmJcDkQ==}
+  '@effect/platform-node@4.0.0-beta.79':
+    resolution: {integrity: sha512-gJrBa+7X04F+C49/Elwp7ah1E7MyacDYq1adeLktVCdT7iUa+YaoiienJJ8Fj4wH1D5iwwckA59xrZzi7iiEEw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: ^4.0.0-beta.78
+      effect: ^4.0.0-beta.79
       ioredis: ^5.7.0
 
   '@ioredis/commands@1.5.1':
@@ -477,8 +477,8 @@ packages:
     resolution: {integrity: sha512-sIy25poR2gRP/tWPTgP0MPeJoJcpv0xzYDcsboapvthbEt1Qw3Al252CA0xFyIh2cYEGGKyBJtKokryv4ERlJw==}
     hasBin: true
 
-  effect@4.0.0-beta.78:
-    resolution: {integrity: sha512-j79Rl9QpHwMz/ZJWLNpZoiVj9N7zHqiLKN5EcYd/A8J1oqejILWQLfc4HPlvqHqKC8SK55LJ+X4gy4ONJ+JpfQ==}
+  effect@4.0.0-beta.79:
+    resolution: {integrity: sha512-AwtiZ1zsbau3HS/zXlB9jRFAjRB8VoANjSwipTH0NtaMUwYPoVokgCF08FmJt9eOGPmeCQy1KRDvsuaYrP5Bhw==}
 
   es-errors@1.3.0:
     resolution: {integrity: sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==}
@@ -703,21 +703,21 @@ snapshots:
   '@dprint/win32-x64@0.54.0':
     optional: true
 
-  '@effect/language-service@0.85.1': {}
+  '@effect/language-service@0.86.2': {}
 
-  '@effect/platform-node-shared@4.0.0-beta.78(effect@4.0.0-beta.78)':
+  '@effect/platform-node-shared@4.0.0-beta.79(effect@4.0.0-beta.79)':
     dependencies:
       '@types/ws': 8.18.1
-      effect: 4.0.0-beta.78
+      effect: 4.0.0-beta.79
       ws: 8.20.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@4.0.0-beta.78(effect@4.0.0-beta.78)(ioredis@5.10.1)':
+  '@effect/platform-node@4.0.0-beta.79(effect@4.0.0-beta.79)(ioredis@5.10.1)':
     dependencies:
-      '@effect/platform-node-shared': 4.0.0-beta.78(effect@4.0.0-beta.78)
-      effect: 4.0.0-beta.78
+      '@effect/platform-node-shared': 4.0.0-beta.79(effect@4.0.0-beta.79)
+      effect: 4.0.0-beta.79
       ioredis: 5.10.1
       mime: 4.1.0
       undici: 8.3.0
@@ -911,7 +911,7 @@ snapshots:
       '@dprint/win32-arm64': 0.54.0
       '@dprint/win32-x64': 0.54.0
 
-  effect@4.0.0-beta.78:
+  effect@4.0.0-beta.79:
     dependencies:
       '@standard-schema/spec': 1.1.0
       fast-check: 4.8.0
