@@ -9,14 +9,6 @@ inputs:
     description: Branch that deploys as the persistent prod stage and is never destroyed.
     required: false
     default: main
-  include-vars:
-    description: Newline-delimited GitHub variable names to expose to Alchemy.
-    required: false
-    default: ""
-  vars-json:
-    description: JSON object of GitHub variables, typically toJSON(vars) from the caller.
-    required: false
-    default: "{}"
 outputs:
   action:
     description: "The lifecycle action that ran: deploy, destroy, or skip."
@@ -66,17 +58,6 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        while IFS= read -r name; do
-          [ -n "$name" ] || continue
-          if [[ ! "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
-            echo "Invalid variable name: $name" >&2
-            exit 1
-          fi
-          value="$(printf '%s' "$VARS_JSON" | jq -r --arg name "$name" '.[$name] // empty')"
-          [ -n "$value" ] || continue
-          export "$name=$value"
-        done <<< "$INCLUDE_VARS"
-
         if [ -n "$PULL_REQUEST_VALUE" ]; then
           export PULL_REQUEST="$PULL_REQUEST_VALUE"
         fi
@@ -84,24 +65,11 @@ runs:
       env:
         STAGE: ${{ steps.resolve.outputs.stage }}
         PULL_REQUEST_VALUE: ${{ steps.resolve.outputs.pull-request }}
-        INCLUDE_VARS: ${{ inputs.include-vars }}
-        VARS_JSON: ${{ inputs.vars-json }}
 
     - if: ${{ steps.resolve.outputs.action == 'destroy' }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        while IFS= read -r name; do
-          [ -n "$name" ] || continue
-          if [[ ! "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
-            echo "Invalid variable name: $name" >&2
-            exit 1
-          fi
-          value="$(printf '%s' "$VARS_JSON" | jq -r --arg name "$name" '.[$name] // empty')"
-          [ -n "$value" ] || continue
-          export "$name=$value"
-        done <<< "$INCLUDE_VARS"
-
         if [ -n "$PULL_REQUEST_VALUE" ]; then
           export PULL_REQUEST="$PULL_REQUEST_VALUE"
         fi
@@ -109,5 +77,3 @@ runs:
       env:
         STAGE: ${{ steps.resolve.outputs.stage }}
         PULL_REQUEST_VALUE: ${{ steps.resolve.outputs.pull-request }}
-        INCLUDE_VARS: ${{ inputs.include-vars }}
-        VARS_JSON: ${{ inputs.vars-json }}
