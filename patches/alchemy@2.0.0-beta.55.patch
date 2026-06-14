@@ -1,0 +1,186 @@
+diff --git a/lib/Build/DevServer.js b/lib/Build/DevServer.js
+index bec74f5d902e4b02f1f88182558cc51164d52e1e..f3a997654fb01489f8d1c6d9739fd5e338d0a9f9 100644
+--- a/lib/Build/DevServer.js
++++ b/lib/Build/DevServer.js
+@@ -110,7 +110,7 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
+     // restart but die when the sidecar shuts down.
+     const rootScope = yield* Effect.scope;
+     const instances = new Map();
+-    const spawn = Effect.fn(function* (props, urlDeferred) {
++    const spawn = Effect.fn(function* (props, urlDeferred, exitDeferred) {
+         const [command, ...args] = props.command.split(" ");
+         const handle = yield* spawner.spawn(ChildProcess.make(command, args, {
+             cwd: props.cwd ?? process.cwd(),
+@@ -121,6 +121,7 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
+                     Redacted.isRedacted(v) ? Redacted.value(v) : v,
+                 ])),
+             },
++            detached: true,
+             stdin: "inherit",
+             // Leave stdout/stderr piped so we can both mirror to the parent
+             // terminal AND parse lines for the first URL.
+@@ -129,17 +130,26 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
+         // they're interrupted when the instance scope closes.
+         yield* mirrorAndExtract(handle.stdout, "stdout", urlDeferred).pipe(Effect.forkScoped);
+         yield* mirrorAndExtract(handle.stderr, "stderr", urlDeferred).pipe(Effect.forkScoped);
++        yield* handle.exitCode.pipe(Effect.flatMap((code) => Deferred.succeed(exitDeferred, code)), Effect.ignore, Effect.forkScoped);
+         return handle;
+     });
+     const stop = Effect.fn(function* (id) {
+         const existing = instances.get(id);
+         if (existing) {
+-            yield* existing.handle.kill();
++            yield* Effect.sync(() => {
++                try {
++                    process.kill(-existing.handle.pid, "SIGTERM");
++                }
++                catch {
++                    // Fall back to killing the direct child below.
++                }
++            });
++            yield* existing.handle.kill().pipe(Effect.ignore);
+             yield* Scope.close(existing.scope, Exit.void);
+             instances.delete(id);
+         }
+     });
+-    const awaitUrl = (deferred) => Deferred.await(deferred).pipe(Effect.timeoutOption(URL_EXTRACT_TIMEOUT), Effect.map(Option.getOrUndefined));
++    const awaitReady = (urlDeferred, exitDeferred, command) => Effect.raceFirst(Deferred.await(urlDeferred).pipe(Effect.map((url) => ({ url }))), Deferred.await(exitDeferred).pipe(Effect.flatMap((code) => Effect.fail(new Error(`DevServer exited before readiness: ${command} exited with code ${code}`))))).pipe(Effect.timeoutOption(URL_EXTRACT_TIMEOUT), Effect.map(Option.getOrElse(() => ({}))));
+     return DevServer.Provider.of({
+         diff: Effect.fn(function* ({ id, news }) {
+             if (!isResolved(news))
+@@ -155,17 +165,16 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
+             const existing = instances.get(id);
+             if (existing) {
+                 if (existing.hash === hash && (yield* existing.handle.isRunning)) {
+-                    const url = yield* awaitUrl(existing.urlDeferred);
+-                    return { url };
++                    return yield* awaitReady(existing.urlDeferred, existing.exitDeferred, news.command);
+                 }
+                 yield* stop(id);
+             }
+             const scope = yield* Scope.fork(rootScope);
+             const urlDeferred = yield* Deferred.make();
+-            const handle = yield* spawn(news, urlDeferred).pipe(Scope.provide(scope));
+-            instances.set(id, { hash, handle, scope, urlDeferred });
+-            const url = yield* awaitUrl(urlDeferred);
+-            return { url };
++            const exitDeferred = yield* Deferred.make();
++            const handle = yield* spawn(news, urlDeferred, exitDeferred).pipe(Scope.provide(scope));
++            instances.set(id, { hash, handle, scope, urlDeferred, exitDeferred });
++            return yield* awaitReady(urlDeferred, exitDeferred, news.command);
+         }),
+         delete: Effect.fn(function* ({ id }) {
+             yield* stop(id);
+diff --git a/src/Build/DevServer.ts b/src/Build/DevServer.ts
+index 08729aaba03e6739e360c4a2b05bcf8676fe30a7..dc5d1e2caef58db33c4577cf59d063adda6f322f 100644
+--- a/src/Build/DevServer.ts
++++ b/src/Build/DevServer.ts
+@@ -185,12 +185,14 @@ export const LocalDevServerProvider = () =>
+            * appeared at the previous reconcile.
+            */
+           urlDeferred: Deferred.Deferred<string>;
++          exitDeferred: Deferred.Deferred<number>;
+         }
+       >();
+ 
+       const spawn = Effect.fn(function* (
+         props: DevServerProps,
+         urlDeferred: Deferred.Deferred<string>,
++        exitDeferred: Deferred.Deferred<number>,
+       ) {
+         const [command, ...args] = props.command.split(" ");
+ 
+@@ -206,6 +208,7 @@ export const LocalDevServerProvider = () =>
+                 ]),
+               ),
+             },
++            detached: true,
+             stdin: "inherit",
+             // Leave stdout/stderr piped so we can both mirror to the parent
+             // terminal AND parse lines for the first URL.
+@@ -220,6 +223,11 @@ export const LocalDevServerProvider = () =>
+         yield* mirrorAndExtract(handle.stderr, "stderr", urlDeferred).pipe(
+           Effect.forkScoped,
+         );
++        yield* handle.exitCode.pipe(
++          Effect.flatMap((code) => Deferred.succeed(exitDeferred, code)),
++          Effect.ignore,
++          Effect.forkScoped,
++        );
+ 
+         return handle;
+       });
+@@ -227,16 +235,38 @@ export const LocalDevServerProvider = () =>
+       const stop = Effect.fn(function* (id: string) {
+         const existing = instances.get(id);
+         if (existing) {
+-          yield* existing.handle.kill();
++          yield* Effect.sync(() => {
++            try {
++              process.kill(-existing.handle.pid, "SIGTERM");
++            } catch {
++              // Fall back to killing the direct child below.
++            }
++          });
++          yield* existing.handle.kill().pipe(Effect.ignore);
+           yield* Scope.close(existing.scope, Exit.void);
+           instances.delete(id);
+         }
+       });
+ 
+-      const awaitUrl = (deferred: Deferred.Deferred<string>) =>
+-        Deferred.await(deferred).pipe(
++      const awaitReady = (
++        urlDeferred: Deferred.Deferred<string>,
++        exitDeferred: Deferred.Deferred<number>,
++        command: string,
++      ) =>
++        Effect.raceFirst(
++          Deferred.await(urlDeferred).pipe(Effect.map((url) => ({ url }))),
++          Deferred.await(exitDeferred).pipe(
++            Effect.flatMap((code) =>
++              Effect.fail(
++                new Error(
++                  `DevServer exited before readiness: ${command} exited with code ${code}`,
++                ),
++              ),
++            ),
++          ),
++        ).pipe(
+           Effect.timeoutOption(URL_EXTRACT_TIMEOUT),
+-          Effect.map(Option.getOrUndefined),
++          Effect.map(Option.getOrElse(() => ({}))),
+         );
+ 
+       return DevServer.Provider.of({
+@@ -254,8 +284,11 @@ export const LocalDevServerProvider = () =>
+ 
+           if (existing) {
+             if (existing.hash === hash && (yield* existing.handle.isRunning)) {
+-              const url = yield* awaitUrl(existing.urlDeferred);
+-              return { url };
++              return yield* awaitReady(
++                existing.urlDeferred,
++                existing.exitDeferred,
++                news.command,
++              );
+             }
+ 
+             yield* stop(id);
+@@ -263,12 +296,12 @@ export const LocalDevServerProvider = () =>
+ 
+           const scope = yield* Scope.fork(rootScope);
+           const urlDeferred = yield* Deferred.make<string>();
+-          const handle = yield* spawn(news, urlDeferred).pipe(
++          const exitDeferred = yield* Deferred.make<number>();
++          const handle = yield* spawn(news, urlDeferred, exitDeferred).pipe(
+             Scope.provide(scope),
+           );
+-          instances.set(id, { hash, handle, scope, urlDeferred });
+-          const url = yield* awaitUrl(urlDeferred);
+-          return { url };
++          instances.set(id, { hash, handle, scope, urlDeferred, exitDeferred });
++          return yield* awaitReady(urlDeferred, exitDeferred, news.command);
+         }),
+         delete: Effect.fn(function* ({ id }) {
+           yield* stop(id);

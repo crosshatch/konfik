@@ -64,3 +64,8 @@ workerd
 waku
 deadlinks
 nord
+opencode
+anomalyco
+direnv
+caddyfile
+sslmode
