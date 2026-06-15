@@ -32,7 +32,7 @@ runs:
         PR_NUMBER: ${{ github.event.number }}
       run: |
         if [ "$EVENT_NAME" = "pull_request" ]; then
-          echo "stage=staging-$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "stage=staging_$PR_NUMBER" >> "$GITHUB_OUTPUT"
           echo "pull-request=$PR_NUMBER" >> "$GITHUB_OUTPUT"
 
           if [ "$EVENT_ACTION" = "closed" ]; then
