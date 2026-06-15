@@ -15,7 +15,7 @@ export const syncRepos = Command.make("sync-repos").pipe(
         (entry) => fs.stat(path.join(reposDir, entry)).pipe(Effect.map((info) => info.type === "Directory")),
         { concurrency: "unbounded" },
       )
-      yield* Effect.forEach(
+      const branches = yield* Effect.forEach(
         repos,
         Effect.fn(function* (entry: string) {
           const repoDir = path.join(reposDir, entry)
@@ -24,8 +24,23 @@ export const syncRepos = Command.make("sync-repos").pipe(
             spawner.string,
             Effect.map(String.trim),
           )
+          return { entry, branch }
+        }),
+        { concurrency: "unbounded" },
+      )
+      const detached = branches.filter(({ branch }) => branch === "HEAD")
+      if (detached.length > 0) {
+        const message = `Cannot sync detached repos:\n${detached.map(({ entry }) => `  - ${entry}`).join("\n")}`
+        yield* Console.error(message)
+        return
+      }
+      yield* Effect.forEach(
+        branches,
+        Effect.fn(function* ({ branch, entry }) {
+          const repoDir = path.join(reposDir, entry)
           yield* Console.log(`Syncing "${entry}" (${branch})`)
           yield* ChildProcess.make`git pull origin ${branch}`.pipe(ChildProcess.setCwd(repoDir), spawner.exitCode)
+          yield* Console.log(`Synced "${entry}" (${branch})`)
         }),
         { concurrency: "unbounded" },
       )
