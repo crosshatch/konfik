@@ -184,3 +184,77 @@ index 08729aaba03e6739e360c4a2b05bcf8676fe30a7..dc5d1e2caef58db33c4577cf59d063ad
          }),
          delete: Effect.fn(function* ({ id }) {
            yield* stop(id);
+diff --git a/lib/Build/Command.d.ts b/lib/Build/Command.d.ts
+index 036b9b68d2ac1cfa154574aa8f6e4d491aa8a5ad..8e46d5a533441d706656480e39883db06d62870f 100644
+--- a/lib/Build/Command.d.ts
++++ b/lib/Build/Command.d.ts
+@@ -39,6 +39,10 @@ export interface CommandProps {
+      * Environment variables to pass to the build command.
+      */
+     env?: Record<string, string | Redacted.Redacted<string>>;
++    /**
++     * Run the command on every deploy, even when memoized inputs have not changed.
++     */
++    alwaysRun?: boolean;
+ }
+ export interface Command extends Resource<"Build.Command", CommandProps, {
+     /**
+diff --git a/lib/Build/Command.js b/lib/Build/Command.js
+index 45fe83e7bf394d50b1b67c73457ba1f41d132eea..0844fe059d67b1fdc3eac7db9d6d7878d27ecfc5 100644
+--- a/lib/Build/Command.js
++++ b/lib/Build/Command.js
+@@ -80,6 +80,9 @@ export const CommandProvider = () => Provider.effect(Command, Effect.gen(functio
+             if (!output) {
+                 return undefined;
+             }
++            if (news.alwaysRun) {
++                return { action: "update" };
++            }
+             const newHash = yield* hashDirectory(news);
+             if (newHash !== output.hash) {
+                 return { action: "update" };
+@@ -110,7 +113,8 @@ export const CommandProvider = () => Provider.effect(Command, Effect.gen(functio
+             const desiredHash = yield* hashDirectory(news);
+             const outputPath = getOutputPath(news);
+             const cachedExists = output !== undefined && (yield* fs.exists(output.outdir));
+-            const reusable = cachedExists &&
++            const reusable = !news.alwaysRun &&
++                cachedExists &&
+                 output.hash === desiredHash &&
+                 output.outdir === outputPath;
+             // Ensure — when the cached artifact is missing, stale, or the
+diff --git a/src/Build/Command.ts b/src/Build/Command.ts
+index 4704d9e1c77c93e6eae4cf441b3567215cc754a8..63b32eb1b305e2dc871f6fbf3672c70c8ac74211 100644
+--- a/src/Build/Command.ts
++++ b/src/Build/Command.ts
+@@ -39,6 +39,10 @@ export interface CommandProps {
+    * Environment variables to pass to the build command.
+    */
+   env?: Record<string, string | Redacted.Redacted<string>>;
++  /**
++   * Run the command on every deploy, even when memoized inputs have not changed.
++   */
++  alwaysRun?: boolean;
+ }
+ 
+ export interface Command extends Resource<
+@@ -134,6 +138,9 @@ export const CommandProvider = () =>
+           if (!output) {
+             return undefined;
+           }
++          if (news.alwaysRun) {
++            return { action: "update" as const };
++          }
+           const newHash = yield* hashDirectory(news);
+           if (newHash !== output.hash) {
+             return { action: "update" as const };
+@@ -166,7 +173,8 @@ export const CommandProvider = () =>
+           const cachedExists =
+             output !== undefined && (yield* fs.exists(output.outdir));
+           const reusable =
+-            cachedExists &&
++            !news.alwaysRun &&
++            cachedExists &&
+             output!.hash === desiredHash &&
+             output!.outdir === outputPath;
+ 

@@ -69,3 +69,4 @@ anomalyco
 direnv
 caddyfile
 sslmode
+manualchemical
