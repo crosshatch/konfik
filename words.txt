@@ -70,3 +70,8 @@ direnv
 caddyfile
 sslmode
 manualchemical
+musd
+mezo
+megausd
+usdce
+megaeth
