@@ -1,8 +1,47 @@
+diff --git a/lib/Build/Command.d.ts b/lib/Build/Command.d.ts
+index ceae677..4917339 100644
+--- a/lib/Build/Command.d.ts
++++ b/lib/Build/Command.d.ts
+@@ -36,6 +36,10 @@ export interface CommandProps {
+      * Environment variables to pass to the build command.
+      */
+     env?: Record<string, string | Redacted.Redacted<string>>;
++    /**
++     * Run the command on every deploy, even when memoized inputs have not changed.
++     */
++    alwaysRun?: boolean;
+ }
+ export interface Command extends Resource<"Build.Command", CommandProps, {
+     /**
+diff --git a/lib/Build/Command.js b/lib/Build/Command.js
+index 1c60b53..f6a03db 100644
+--- a/lib/Build/Command.js
++++ b/lib/Build/Command.js
+@@ -82,6 +82,9 @@ export const CommandProvider = () => Provider.effect(Command, Effect.gen(functio
+             if (!output) {
+                 return undefined;
+             }
++            if (news.alwaysRun) {
++                return { action: "update" };
++            }
+             const newHash = yield* hashDirectory(news);
+             if (newHash !== output.hash) {
+                 return { action: "update" };
+@@ -112,7 +115,8 @@ export const CommandProvider = () => Provider.effect(Command, Effect.gen(functio
+             const desiredHash = yield* hashDirectory(news);
+             const outputPath = getOutputPath(news);
+             const cachedExists = output !== undefined && (yield* fs.exists(output.outdir));
+-            const reusable = cachedExists &&
++            const reusable = !news.alwaysRun &&
++                cachedExists &&
+                 output.hash === desiredHash &&
+                 output.outdir === outputPath;
+             // Ensure — when the cached artifact is missing, stale, or the
 diff --git a/lib/Build/DevServer.js b/lib/Build/DevServer.js
-index bec74f5d902e4b02f1f88182558cc51164d52e1e..f3a997654fb01489f8d1c6d9739fd5e338d0a9f9 100644
+index 23e9c73..4a0b114 100644
 --- a/lib/Build/DevServer.js
 +++ b/lib/Build/DevServer.js
-@@ -110,7 +110,7 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
+@@ -113,7 +113,7 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
      // restart but die when the sidecar shuts down.
      const rootScope = yield* Effect.scope;
      const instances = new Map();
@@ -11,7 +50,7 @@ index bec74f5d902e4b02f1f88182558cc51164d52e1e..f3a997654fb01489f8d1c6d9739fd5e3
          const [command, ...args] = props.command.split(" ");
          const handle = yield* spawner.spawn(ChildProcess.make(command, args, {
              cwd: props.cwd ?? process.cwd(),
-@@ -121,6 +121,7 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
+@@ -124,6 +124,7 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
                      Redacted.isRedacted(v) ? Redacted.value(v) : v,
                  ])),
              },
@@ -19,7 +58,7 @@ index bec74f5d902e4b02f1f88182558cc51164d52e1e..f3a997654fb01489f8d1c6d9739fd5e3
              stdin: "inherit",
              // Leave stdout/stderr piped so we can both mirror to the parent
              // terminal AND parse lines for the first URL.
-@@ -129,17 +130,26 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
+@@ -132,17 +133,26 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
          // they're interrupted when the instance scope closes.
          yield* mirrorAndExtract(handle.stdout, "stdout", urlDeferred).pipe(Effect.forkScoped);
          yield* mirrorAndExtract(handle.stderr, "stderr", urlDeferred).pipe(Effect.forkScoped);
@@ -48,7 +87,7 @@ index bec74f5d902e4b02f1f88182558cc51164d52e1e..f3a997654fb01489f8d1c6d9739fd5e3
      return DevServer.Provider.of({
          diff: Effect.fn(function* ({ id, news }) {
              if (!isResolved(news))
-@@ -155,17 +165,16 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
+@@ -158,17 +168,16 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
              const existing = instances.get(id);
              if (existing) {
                  if (existing.hash === hash && (yield* existing.handle.isRunning)) {
@@ -71,11 +110,44 @@ index bec74f5d902e4b02f1f88182558cc51164d52e1e..f3a997654fb01489f8d1c6d9739fd5e3
          }),
          delete: Effect.fn(function* ({ id }) {
              yield* stop(id);
+diff --git a/src/Build/Command.ts b/src/Build/Command.ts
+index 3c41f7f..f2a104c 100644
+--- a/src/Build/Command.ts
++++ b/src/Build/Command.ts
+@@ -39,6 +39,10 @@ export interface CommandProps {
+    * Environment variables to pass to the build command.
+    */
+   env?: Record<string, string | Redacted.Redacted<string>>;
++  /**
++   * Run the command on every deploy, even when memoized inputs have not changed.
++   */
++  alwaysRun?: boolean;
+ }
+ 
+ export interface Command extends Resource<
+@@ -139,6 +143,9 @@ export const CommandProvider = () =>
+           if (!output) {
+             return undefined;
+           }
++          if (news.alwaysRun) {
++            return { action: "update" as const };
++          }
+           const newHash = yield* hashDirectory(news);
+           if (newHash !== output.hash) {
+             return { action: "update" as const };
+@@ -171,6 +178,7 @@ export const CommandProvider = () =>
+           const cachedExists =
+             output !== undefined && (yield* fs.exists(output.outdir));
+           const reusable =
++            !news.alwaysRun &&
+             cachedExists &&
+             output!.hash === desiredHash &&
+             output!.outdir === outputPath;
 diff --git a/src/Build/DevServer.ts b/src/Build/DevServer.ts
-index 08729aaba03e6739e360c4a2b05bcf8676fe30a7..dc5d1e2caef58db33c4577cf59d063adda6f322f 100644
+index 21ece39..9a5d229 100644
 --- a/src/Build/DevServer.ts
 +++ b/src/Build/DevServer.ts
-@@ -185,12 +185,14 @@ export const LocalDevServerProvider = () =>
+@@ -188,12 +188,14 @@ export const LocalDevServerProvider = () =>
             * appeared at the previous reconcile.
             */
            urlDeferred: Deferred.Deferred<string>;
@@ -90,7 +162,7 @@ index 08729aaba03e6739e360c4a2b05bcf8676fe30a7..dc5d1e2caef58db33c4577cf59d063ad
        ) {
          const [command, ...args] = props.command.split(" ");
  
-@@ -206,6 +208,7 @@ export const LocalDevServerProvider = () =>
+@@ -209,6 +211,7 @@ export const LocalDevServerProvider = () =>
                  ]),
                ),
              },
@@ -98,7 +170,7 @@ index 08729aaba03e6739e360c4a2b05bcf8676fe30a7..dc5d1e2caef58db33c4577cf59d063ad
              stdin: "inherit",
              // Leave stdout/stderr piped so we can both mirror to the parent
              // terminal AND parse lines for the first URL.
-@@ -220,6 +223,11 @@ export const LocalDevServerProvider = () =>
+@@ -223,6 +226,11 @@ export const LocalDevServerProvider = () =>
          yield* mirrorAndExtract(handle.stderr, "stderr", urlDeferred).pipe(
            Effect.forkScoped,
          );
@@ -110,7 +182,7 @@ index 08729aaba03e6739e360c4a2b05bcf8676fe30a7..dc5d1e2caef58db33c4577cf59d063ad
  
          return handle;
        });
-@@ -227,16 +235,38 @@ export const LocalDevServerProvider = () =>
+@@ -230,16 +238,38 @@ export const LocalDevServerProvider = () =>
        const stop = Effect.fn(function* (id: string) {
          const existing = instances.get(id);
          if (existing) {
@@ -153,7 +225,7 @@ index 08729aaba03e6739e360c4a2b05bcf8676fe30a7..dc5d1e2caef58db33c4577cf59d063ad
          );
  
        return DevServer.Provider.of({
-@@ -254,8 +284,11 @@ export const LocalDevServerProvider = () =>
+@@ -257,8 +287,11 @@ export const LocalDevServerProvider = () =>
  
            if (existing) {
              if (existing.hash === hash && (yield* existing.handle.isRunning)) {
@@ -167,7 +239,7 @@ index 08729aaba03e6739e360c4a2b05bcf8676fe30a7..dc5d1e2caef58db33c4577cf59d063ad
              }
  
              yield* stop(id);
-@@ -263,12 +296,12 @@ export const LocalDevServerProvider = () =>
+@@ -266,12 +299,12 @@ export const LocalDevServerProvider = () =>
  
            const scope = yield* Scope.fork(rootScope);
            const urlDeferred = yield* Deferred.make<string>();
@@ -184,77 +256,3 @@ index 08729aaba03e6739e360c4a2b05bcf8676fe30a7..dc5d1e2caef58db33c4577cf59d063ad
          }),
          delete: Effect.fn(function* ({ id }) {
            yield* stop(id);
-diff --git a/lib/Build/Command.d.ts b/lib/Build/Command.d.ts
-index 036b9b68d2ac1cfa154574aa8f6e4d491aa8a5ad..8e46d5a533441d706656480e39883db06d62870f 100644
---- a/lib/Build/Command.d.ts
-+++ b/lib/Build/Command.d.ts
-@@ -39,6 +39,10 @@ export interface CommandProps {
-      * Environment variables to pass to the build command.
-      */
-     env?: Record<string, string | Redacted.Redacted<string>>;
-+    /**
-+     * Run the command on every deploy, even when memoized inputs have not changed.
-+     */
-+    alwaysRun?: boolean;
- }
- export interface Command extends Resource<"Build.Command", CommandProps, {
-     /**
-diff --git a/lib/Build/Command.js b/lib/Build/Command.js
-index 45fe83e7bf394d50b1b67c73457ba1f41d132eea..0844fe059d67b1fdc3eac7db9d6d7878d27ecfc5 100644
---- a/lib/Build/Command.js
-+++ b/lib/Build/Command.js
-@@ -80,6 +80,9 @@ export const CommandProvider = () => Provider.effect(Command, Effect.gen(functio
-             if (!output) {
-                 return undefined;
-             }
-+            if (news.alwaysRun) {
-+                return { action: "update" };
-+            }
-             const newHash = yield* hashDirectory(news);
-             if (newHash !== output.hash) {
-                 return { action: "update" };
-@@ -110,7 +113,8 @@ export const CommandProvider = () => Provider.effect(Command, Effect.gen(functio
-             const desiredHash = yield* hashDirectory(news);
-             const outputPath = getOutputPath(news);
-             const cachedExists = output !== undefined && (yield* fs.exists(output.outdir));
--            const reusable = cachedExists &&
-+            const reusable = !news.alwaysRun &&
-+                cachedExists &&
-                 output.hash === desiredHash &&
-                 output.outdir === outputPath;
-             // Ensure — when the cached artifact is missing, stale, or the
-diff --git a/src/Build/Command.ts b/src/Build/Command.ts
-index 4704d9e1c77c93e6eae4cf441b3567215cc754a8..63b32eb1b305e2dc871f6fbf3672c70c8ac74211 100644
---- a/src/Build/Command.ts
-+++ b/src/Build/Command.ts
-@@ -39,6 +39,10 @@ export interface CommandProps {
-    * Environment variables to pass to the build command.
-    */
-   env?: Record<string, string | Redacted.Redacted<string>>;
-+  /**
-+   * Run the command on every deploy, even when memoized inputs have not changed.
-+   */
-+  alwaysRun?: boolean;
- }
- 
- export interface Command extends Resource<
-@@ -134,6 +138,9 @@ export const CommandProvider = () =>
-           if (!output) {
-             return undefined;
-           }
-+          if (news.alwaysRun) {
-+            return { action: "update" as const };
-+          }
-           const newHash = yield* hashDirectory(news);
-           if (newHash !== output.hash) {
-             return { action: "update" as const };
-@@ -166,7 +173,8 @@ export const CommandProvider = () =>
-           const cachedExists =
-             output !== undefined && (yield* fs.exists(output.outdir));
-           const reusable =
--            cachedExists &&
-+            !news.alwaysRun &&
-+            cachedExists &&
-             output!.hash === desiredHash &&
-             output!.outdir === outputPath;
- 
