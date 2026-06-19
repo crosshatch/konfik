@@ -75,3 +75,4 @@ mezo
 megausd
 usdce
 megaeth
+megausdc
