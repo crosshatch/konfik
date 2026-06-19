@@ -254,3 +254,84 @@ index 21ece3967b1ae10b092e993ae7ae88db6a52e9dc..9a5d229365bd34acc367011f86daba76
          }),
          delete: Effect.fn(function* ({ id }) {
            yield* stop(id);
+diff --git a/lib/GitHub/Secrets.js b/lib/GitHub/Secrets.js
+index 91fb10d89b0b068e1e957dbaf227c46a18cf3ef8..7277bdedaa1581d129613fda7bd154a1118f4edc 100644
+--- a/lib/GitHub/Secrets.js
++++ b/lib/GitHub/Secrets.js
+@@ -1,3 +1,4 @@
++import * as Config from "effect/Config";
+ import * as Effect from "effect/Effect";
+ import * as Redacted from "effect/Redacted";
+ import * as Output from "../Output.js";
+@@ -28,14 +29,16 @@ export const Secrets = ({ owner, repository, environment, secrets, }) => Effect.
+     name,
+     value: liftValue(value),
+ })));
+-// Accepts a plain string, an existing `Redacted<string>`, or an `Output`
+-// of either. We must lift via `Output.map` for the `Output` case so the
+-// inner string gets wrapped after the engine resolves it — otherwise the
+-// `Redacted.make(output)` path produces `Redacted<Output<...>>`, which
+-// later double-wraps to `Redacted<Redacted<string>>` and stringifies to
+-// `<redacted>` inside `sodium.from_string`.
+-const liftValue = (value) => Output.isOutput(value)
+-    ? Output.map(value, toRedacted)
+-    : toRedacted(value);
++// Accepts a plain string, an existing `Redacted<string>`, or a lazy `Input`
++// of either. We must lift through lazy inputs so the inner string gets wrapped
++// after the engine resolves it — otherwise `Redacted.make(input)` produces an
++// opaque `Redacted<Config | Effect | Output>` that the plan cannot resolve.
++const liftValue = (value) => Config.isConfig(value)
++    ? Config.map(value, toRedacted)
++    : Effect.isEffect(value)
++        ? Effect.map(value, toRedacted)
++        : Output.isOutput(value)
++            ? Output.map(value, toRedacted)
++            : toRedacted(value);
+ const toRedacted = (value) => Redacted.isRedacted(value)
+     ? value
+     : Redacted.make(value);
+diff --git a/src/GitHub/Secrets.ts b/src/GitHub/Secrets.ts
+index 7b3b2cc0cc37a1cb7ff8ca88f07742920991b73a..1586eac87a47f595c944db58b682f72c255d0128 100644
+--- a/src/GitHub/Secrets.ts
++++ b/src/GitHub/Secrets.ts
+@@ -1,3 +1,4 @@
++import * as Config from "effect/Config";
+ import * as Effect from "effect/Effect";
+ import * as Redacted from "effect/Redacted";
+ 
+@@ -66,21 +67,23 @@ export const Secrets = ({
+     ),
+   );
+ 
+-// Accepts a plain string, an existing `Redacted<string>`, or an `Output`
+-// of either. We must lift via `Output.map` for the `Output` case so the
+-// inner string gets wrapped after the engine resolves it — otherwise the
+-// `Redacted.make(output)` path produces `Redacted<Output<...>>`, which
+-// later double-wraps to `Redacted<Redacted<string>>` and stringifies to
+-// `<redacted>` inside `sodium.from_string`.
++// Accepts a plain string, an existing `Redacted<string>`, or a lazy `Input`
++// of either. We must lift through lazy inputs so the inner string gets wrapped
++// after the engine resolves it — otherwise `Redacted.make(input)` produces an
++// opaque `Redacted<Config | Effect | Output>` that the plan cannot resolve.
+ const liftValue = (
+   value: Input<string | Redacted.Redacted<string>>,
+ ): Input<Redacted.Redacted<string>> =>
+-  Output.isOutput(value)
+-    ? Output.map(
+-        value as Output.Output<string | Redacted.Redacted<string>>,
+-        toRedacted,
+-      )
+-    : toRedacted(value as string | Redacted.Redacted<string>);
++  Config.isConfig(value)
++    ? Config.map(value, toRedacted)
++    : Effect.isEffect(value)
++      ? Effect.map(value, toRedacted)
++      : Output.isOutput(value)
++        ? Output.map(
++            value as Output.Output<string | Redacted.Redacted<string>>,
++            toRedacted,
++          )
++        : toRedacted(value as string | Redacted.Redacted<string>);
+ 
+ const toRedacted = (
+   value: string | Redacted.Redacted<string>,
