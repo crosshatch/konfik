@@ -1,5 +1,5 @@
 diff --git a/lib/Build/Command.d.ts b/lib/Build/Command.d.ts
-index ceae677..4917339 100644
+index 51de41404042cea9f5303996a9ba71d954e0f315..861569b30881f4458ecdba970758602dd9fbea39 100644
 --- a/lib/Build/Command.d.ts
 +++ b/lib/Build/Command.d.ts
 @@ -36,6 +36,10 @@ export interface CommandProps {
@@ -14,10 +14,10 @@ index ceae677..4917339 100644
  export interface Command extends Resource<"Build.Command", CommandProps, {
      /**
 diff --git a/lib/Build/Command.js b/lib/Build/Command.js
-index 1c60b53..f6a03db 100644
+index fa93bbb73b60c81883af6498296db865f47c975f..4889768c590a67b61eb1abdf97921fc04ed078f7 100644
 --- a/lib/Build/Command.js
 +++ b/lib/Build/Command.js
-@@ -82,6 +82,9 @@ export const CommandProvider = () => Provider.effect(Command, Effect.gen(functio
+@@ -97,6 +97,9 @@ export const CommandProvider = () => Provider.effect(Command, Effect.gen(functio
              if (!output) {
                  return undefined;
              }
@@ -27,18 +27,16 @@ index 1c60b53..f6a03db 100644
              const newHash = yield* hashDirectory(news);
              if (newHash !== output.hash) {
                  return { action: "update" };
-@@ -112,7 +115,8 @@ export const CommandProvider = () => Provider.effect(Command, Effect.gen(functio
-             const desiredHash = yield* hashDirectory(news);
-             const outputPath = getOutputPath(news);
-             const cachedExists = output !== undefined && (yield* fs.exists(output.outdir));
--            const reusable = cachedExists &&
-+            const reusable = !news.alwaysRun &&
-+                cachedExists &&
+@@ -129,6 +132,7 @@ export const CommandProvider = () => Provider.effect(Command, Effect.gen(functio
+             const cachedExists = output !== undefined &&
+                 (yield* fs.exists(resolveOutdir(output.outdir)));
+             const reusable = cachedExists &&
++                !news.alwaysRun &&
                  output.hash === desiredHash &&
-                 output.outdir === outputPath;
+                 resolveOutdir(output.outdir) === outputPath;
              // Ensure — when the cached artifact is missing, stale, or the
 diff --git a/lib/Build/DevServer.js b/lib/Build/DevServer.js
-index 23e9c73..4a0b114 100644
+index 23e9c73bbabe9e99e7e463a17c57d6051c9bc344..ce85827952eb11aa19a99a3af46c3551649e2dd2 100644
 --- a/lib/Build/DevServer.js
 +++ b/lib/Build/DevServer.js
 @@ -113,7 +113,7 @@ import.meta.url.endsWith(".ts") ? "./Local.ts" : "./Local.js", import.meta.url),
@@ -111,7 +109,7 @@ index 23e9c73..4a0b114 100644
          delete: Effect.fn(function* ({ id }) {
              yield* stop(id);
 diff --git a/src/Build/Command.ts b/src/Build/Command.ts
-index 3c41f7f..f2a104c 100644
+index 29eda0fc5510fa1b8b1d47a9e6d9e44a9b9c8080..97cd7cc9c15b73197be78424930351a11e5551b6 100644
 --- a/src/Build/Command.ts
 +++ b/src/Build/Command.ts
 @@ -39,6 +39,10 @@ export interface CommandProps {
@@ -125,7 +123,7 @@ index 3c41f7f..f2a104c 100644
  }
  
  export interface Command extends Resource<
-@@ -139,6 +143,9 @@ export const CommandProvider = () =>
+@@ -163,6 +167,9 @@ export const CommandProvider = () =>
            if (!output) {
              return undefined;
            }
@@ -135,16 +133,16 @@ index 3c41f7f..f2a104c 100644
            const newHash = yield* hashDirectory(news);
            if (newHash !== output.hash) {
              return { action: "update" as const };
-@@ -171,6 +178,7 @@ export const CommandProvider = () =>
-           const cachedExists =
-             output !== undefined && (yield* fs.exists(output.outdir));
+@@ -196,6 +203,7 @@ export const CommandProvider = () =>
+             output !== undefined &&
+             (yield* fs.exists(resolveOutdir(output.outdir)));
            const reusable =
 +            !news.alwaysRun &&
              cachedExists &&
              output!.hash === desiredHash &&
-             output!.outdir === outputPath;
+             resolveOutdir(output!.outdir) === outputPath;
 diff --git a/src/Build/DevServer.ts b/src/Build/DevServer.ts
-index 21ece39..9a5d229 100644
+index 21ece3967b1ae10b092e993ae7ae88db6a52e9dc..9a5d229365bd34acc367011f86daba766a51e6ab 100644
 --- a/src/Build/DevServer.ts
 +++ b/src/Build/DevServer.ts
 @@ -188,12 +188,14 @@ export const LocalDevServerProvider = () =>
