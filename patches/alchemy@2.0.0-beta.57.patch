@@ -263,7 +263,7 @@ index 91fb10d89b0b068e1e957dbaf227c46a18cf3ef8..7277bdedaa1581d129613fda7bd154a1
  import * as Effect from "effect/Effect";
  import * as Redacted from "effect/Redacted";
  import * as Output from "../Output.js";
-@@ -28,14 +29,16 @@ export const Secrets = ({ owner, repository, environment, secrets, }) => Effect.
+@@ -28,15 +29,17 @@ export const Secrets = ({ owner, repository, environment, secrets, }) => Effect.
      name,
      value: liftValue(value),
  })));
