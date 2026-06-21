@@ -290,6 +290,260 @@ index 91fb10d89b0b068e1e957dbaf227c46a18cf3ef8..7277bdedaa1581d129613fda7bd154a1
  const toRedacted = (value) => Redacted.isRedacted(value)
      ? value
      : Redacted.make(value);
+diff --git a/lib/Neon/Branch.js b/lib/Neon/Branch.js
+index 29c8dd109e5a2a7b95635551cd07f4c576e22a35..2dcd8c51d663f2d8535f8f41b62b7af3b0b2785c 100644
+--- a/lib/Neon/Branch.js
++++ b/lib/Neon/Branch.js
+@@ -72,6 +72,10 @@ export const BranchProvider = () => Provider.succeed(Branch, {
+             output.initSource !== (news.initSource ?? "parent-data")) {
+             return { action: "replace" };
+         }
++        const newProjectId = resolveProjectId(news.project);
++        if (output?.projectId && output.projectId !== newProjectId) {
++            return { action: "replace" };
++        }
+         const newName = yield* createBranchName(id, news.name);
+         const oldName = output?.branchName
+             ? output.branchName
+@@ -153,6 +157,46 @@ export const BranchProvider = () => Provider.succeed(Branch, {
+     }),
+     reconcile: Effect.fn(function* ({ id, news, output }) {
+         const newName = yield* createBranchName(id, news.name);
++        const createBranchInfo = Effect.gen(function* () {
++            const projectId = resolveProjectId(news.project);
++            const parentBranchId = yield* resolveParentBranchId(news.parentBranch, projectId);
++            const created = yield* createProjectBranch({
++                project_id: projectId,
++                branch: {
++                    name: newName,
++                    parent_id: parentBranchId,
++                    parent_lsn: news.parentLsn,
++                    parent_timestamp: news.parentTimestamp,
++                    init_source: news.initSource,
++                    protected: news.protected,
++                    expires_at: news.expiresAt,
++                },
++                endpoints: buildEndpoints(news.endpoints),
++            });
++            yield* waitForOperations(created.operations);
++            const db = created.databases[0];
++            if (!db) {
++                return yield* Effect.die(`Neon branch ${created.branch.id} created with no databases`);
++            }
++            const conn = yield* fetchConnection(projectId, created.branch.id, db.name, db.owner_name);
++            return {
++                branchId: created.branch.id,
++                branchName: created.branch.name,
++                projectId: created.branch.project_id,
++                parentBranchId: created.branch.parent_id,
++                parentLsn: created.branch.parent_lsn,
++                parentTimestamp: created.branch.parent_timestamp,
++                initSource: created.branch.init_source,
++                protected: created.branch.protected,
++                default: created.branch.default,
++                expiresAt: created.branch.expires_at,
++                databaseName: db.name,
++                roleName: db.owner_name,
++                connectionUri: conn.uri,
++                pooledConnectionUri: conn.pooled,
++                origin: parsePostgresOrigin(conn.uri),
++            };
++        });
+         // Ensure — when no prior output exists we create the branch;
+         // otherwise sync the mutable scalar fields on the existing
+         // branch via updateProjectBranch.
+@@ -180,47 +226,8 @@ export const BranchProvider = () => Provider.succeed(Branch, {
+                 connectionUri: output.connectionUri,
+                 pooledConnectionUri: output.pooledConnectionUri,
+                 origin: output.origin,
+-            })))
+-            : yield* Effect.gen(function* () {
+-                const projectId = resolveProjectId(news.project);
+-                const parentBranchId = yield* resolveParentBranchId(news.parentBranch, projectId);
+-                const created = yield* createProjectBranch({
+-                    project_id: projectId,
+-                    branch: {
+-                        name: newName,
+-                        parent_id: parentBranchId,
+-                        parent_lsn: news.parentLsn,
+-                        parent_timestamp: news.parentTimestamp,
+-                        init_source: news.initSource,
+-                        protected: news.protected,
+-                        expires_at: news.expiresAt,
+-                    },
+-                    endpoints: buildEndpoints(news.endpoints),
+-                });
+-                yield* waitForOperations(created.operations);
+-                const db = created.databases[0];
+-                if (!db) {
+-                    return yield* Effect.die(`Neon branch ${created.branch.id} created with no databases`);
+-                }
+-                const conn = yield* fetchConnection(projectId, created.branch.id, db.name, db.owner_name);
+-                return {
+-                    branchId: created.branch.id,
+-                    branchName: created.branch.name,
+-                    projectId: created.branch.project_id,
+-                    parentBranchId: created.branch.parent_id,
+-                    parentLsn: created.branch.parent_lsn,
+-                    parentTimestamp: created.branch.parent_timestamp,
+-                    initSource: created.branch.init_source,
+-                    protected: created.branch.protected,
+-                    default: created.branch.default,
+-                    expiresAt: created.branch.expires_at,
+-                    databaseName: db.name,
+-                    roleName: db.owner_name,
+-                    connectionUri: conn.uri,
+-                    pooledConnectionUri: conn.pooled,
+-                    origin: parsePostgresOrigin(conn.uri),
+-                };
+-            });
++            })), Effect.catchTag("NotFound", () => createBranchInfo))
++            : yield* createBranchInfo;
+         const connectionUri = Redacted.make(branchInfo.connectionUri);
+         const migrationsTable = news.migrationsTable ??
+             output?.migrationsTable ??
+diff --git a/src/Neon/Branch.ts b/src/Neon/Branch.ts
+index d9d1460fc6c785a7f66eb1a6aa3b8a0fca3f2d88..6a595bd65101db8787259ef8592b967cde3c2134 100644
+--- a/src/Neon/Branch.ts
++++ b/src/Neon/Branch.ts
+@@ -215,6 +215,10 @@ export const BranchProvider = () =>
+       ) {
+         return { action: "replace" } as const;
+       }
++      const newProjectId = resolveProjectId(news.project as BranchSource);
++      if (output?.projectId && output.projectId !== newProjectId) {
++        return { action: "replace" } as const;
++      }
+       const newName = yield* createBranchName(id, news.name);
+       const oldName = output?.branchName
+         ? output.branchName
+@@ -312,6 +316,60 @@ export const BranchProvider = () =>
+     }),
+     reconcile: Effect.fn(function* ({ id, news, output }) {
+       const newName = yield* createBranchName(id, news.name);
++      const createBranchInfo = Effect.gen(function* () {
++        const projectId = resolveProjectId(news.project as BranchSource);
++        const parentBranchId = yield* resolveParentBranchId(
++          news.parentBranch as ParentBranchSource | undefined,
++          projectId,
++        );
++        const created = yield* createProjectBranch({
++          project_id: projectId,
++          branch: {
++            name: newName,
++            parent_id: parentBranchId,
++            parent_lsn: news.parentLsn,
++            parent_timestamp: news.parentTimestamp,
++            init_source: news.initSource,
++            protected: news.protected,
++            expires_at: news.expiresAt,
++          },
++          endpoints: buildEndpoints(news.endpoints),
++        });
++        yield* waitForOperations(created.operations);
++
++        const db = created.databases[0];
++        if (!db) {
++          return yield* Effect.die(
++            `Neon branch ${created.branch.id} created with no databases`,
++          );
++        }
++        const conn = yield* fetchConnection(
++          projectId,
++          created.branch.id,
++          db.name,
++          db.owner_name,
++        );
++        return {
++          branchId: created.branch.id,
++          branchName: created.branch.name,
++          projectId: created.branch.project_id,
++          parentBranchId: created.branch.parent_id,
++          parentLsn: created.branch.parent_lsn,
++          parentTimestamp: created.branch.parent_timestamp,
++          initSource: created.branch.init_source as
++            | "schema-only"
++            | "parent-data"
++            | undefined,
++          protected: created.branch.protected,
++          default: created.branch.default,
++          expiresAt: created.branch.expires_at,
++          databaseName: db.name,
++          roleName: db.owner_name,
++          connectionUri: conn.uri,
++          pooledConnectionUri: conn.pooled,
++          origin: parsePostgresOrigin(conn.uri),
++        };
++      });
+ 
+       // Ensure — when no prior output exists we create the branch;
+       // otherwise sync the mutable scalar fields on the existing
+@@ -342,62 +399,10 @@ export const BranchProvider = () =>
+               connectionUri: output.connectionUri,
+               pooledConnectionUri: output.pooledConnectionUri,
+               origin: output.origin,
+-            })),
++            })),
++            Effect.catchTag("NotFound", () => createBranchInfo),
+           )
+-        : yield* Effect.gen(function* () {
+-            const projectId = resolveProjectId(news.project as BranchSource);
+-            const parentBranchId = yield* resolveParentBranchId(
+-              news.parentBranch as ParentBranchSource | undefined,
+-              projectId,
+-            );
+-            const created = yield* createProjectBranch({
+-              project_id: projectId,
+-              branch: {
+-                name: newName,
+-                parent_id: parentBranchId,
+-                parent_lsn: news.parentLsn,
+-                parent_timestamp: news.parentTimestamp,
+-                init_source: news.initSource,
+-                protected: news.protected,
+-                expires_at: news.expiresAt,
+-              },
+-              endpoints: buildEndpoints(news.endpoints),
+-            });
+-            yield* waitForOperations(created.operations);
+-
+-            const db = created.databases[0];
+-            if (!db) {
+-              return yield* Effect.die(
+-                `Neon branch ${created.branch.id} created with no databases`,
+-              );
+-            }
+-            const conn = yield* fetchConnection(
+-              projectId,
+-              created.branch.id,
+-              db.name,
+-              db.owner_name,
+-            );
+-            return {
+-              branchId: created.branch.id,
+-              branchName: created.branch.name,
+-              projectId: created.branch.project_id,
+-              parentBranchId: created.branch.parent_id,
+-              parentLsn: created.branch.parent_lsn,
+-              parentTimestamp: created.branch.parent_timestamp,
+-              initSource: created.branch.init_source as
+-                | "schema-only"
+-                | "parent-data"
+-                | undefined,
+-              protected: created.branch.protected,
+-              default: created.branch.default,
+-              expiresAt: created.branch.expires_at,
+-              databaseName: db.name,
+-              roleName: db.owner_name,
+-              connectionUri: conn.uri,
+-              pooledConnectionUri: conn.pooled,
+-              origin: parsePostgresOrigin(conn.uri),
+-            };
+-          });
++        : yield* createBranchInfo;
+ 
+       const connectionUri = Redacted.make(branchInfo.connectionUri);
+       const migrationsTable =
 diff --git a/src/GitHub/Secrets.ts b/src/GitHub/Secrets.ts
 index 7b3b2cc0cc37a1cb7ff8ca88f07742920991b73a..1586eac87a47f595c944db58b682f72c255d0128 100644
 --- a/src/GitHub/Secrets.ts
@@ -299,7 +553,7 @@ index 7b3b2cc0cc37a1cb7ff8ca88f07742920991b73a..1586eac87a47f595c944db58b682f72c
  import * as Effect from "effect/Effect";
  import * as Redacted from "effect/Redacted";
  
-@@ -66,21 +67,23 @@ export const Secrets = ({
+@@ -66,25 +67,27 @@ export const Secrets = ({
      ),
    );
  
@@ -335,3 +589,7 @@ index 7b3b2cc0cc37a1cb7ff8ca88f07742920991b73a..1586eac87a47f595c944db58b682f72c
  
  const toRedacted = (
    value: string | Redacted.Redacted<string>,
+ ): Redacted.Redacted<string> =>
+   Redacted.isRedacted(value)
+     ? (value as Redacted.Redacted<string>)
+     : Redacted.make(value);
