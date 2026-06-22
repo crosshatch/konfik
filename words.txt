@@ -77,3 +77,4 @@ usdce
 megaeth
 megausdc
 madhatcher
+gadgeting
