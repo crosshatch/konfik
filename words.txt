@@ -76,3 +76,4 @@ megausd
 usdce
 megaeth
 megausdc
+madhatcher
