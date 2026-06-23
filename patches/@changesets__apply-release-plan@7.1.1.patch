@@ -2,7 +2,7 @@ diff --git a/dist/changesets-apply-release-plan.cjs.js b/dist/changesets-apply-r
 index a5c67efc0fbaf74981ab495652ea07220e9fcd7c..79f39e63274a6be707b3e442e1b05e805e9f6f4b 100644
 --- a/dist/changesets-apply-release-plan.cjs.js
 +++ b/dist/changesets-apply-release-plan.cjs.js
-@@ -504,12 +504,14 @@ async function prependFile(filePath, data, name, prettierInstance) {
+@@ -504,12 +504,17 @@ async function prependFile(filePath, data, name, prettierInstance) {
    await writeFormattedMarkdownFile(filePath, newChangelog, prettierInstance);
  }
  async function writeFormattedMarkdownFile(filePath, content, prettierInstance) {
@@ -18,7 +18,10 @@ index a5c67efc0fbaf74981ab495652ea07220e9fcd7c..79f39e63274a6be707b3e442e1b05e80
 +  }
 +
 +  const { format } = await import("oxfmt");
-+  const result = await format(filePath, content);
++  const result = await format(filePath, content, {
++    proseWrap: "always",
++    printWidth: 120,
++  });
 +  await fs__default["default"].writeFile(filePath, result.code);
  }
  
@@ -27,7 +30,7 @@ diff --git a/dist/changesets-apply-release-plan.esm.js b/dist/changesets-apply-r
 index b363b0ca1a0743466485f7978cf3bba336cb51a1..0e6f6c89a89dc68fdc4c741f187cc18d8448fb2b 100644
 --- a/dist/changesets-apply-release-plan.esm.js
 +++ b/dist/changesets-apply-release-plan.esm.js
-@@ -460,12 +460,14 @@ async function prependFile(filePath, data, name, prettierInstance) {
+@@ -460,12 +460,17 @@ async function prependFile(filePath, data, name, prettierInstance) {
    await writeFormattedMarkdownFile(filePath, newChangelog, prettierInstance);
  }
  async function writeFormattedMarkdownFile(filePath, content, prettierInstance) {
@@ -43,7 +46,10 @@ index b363b0ca1a0743466485f7978cf3bba336cb51a1..0e6f6c89a89dc68fdc4c741f187cc18d
 +  }
 +
 +  const { format } = await import("oxfmt");
-+  const result = await format(filePath, content);
++  const result = await format(filePath, content, {
++    proseWrap: "always",
++    printWidth: 120,
++  });
 +  await fs.writeFile(filePath, result.code);
  }
  
