@@ -1,4 +1,5 @@
 {
+  "name": "konfik",
   "private": true,
   "type": "module",
   "scripts": {
