@@ -12,6 +12,6 @@ export default {
     fakeTimers: { toFake: undefined },
     sequence: { concurrent: true },
     server: { deps: { inline: ["@effect/vitest"] } },
-    setupFiles: [new URL("./vitest.setup.ts", import.meta.url).pathname],
+    setupFiles: [new URL("vitest.setup.ts", import.meta.url).pathname],
   },
 } satisfies ViteUserConfig
