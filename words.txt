@@ -79,3 +79,5 @@ megausdc
 madhatcher
 gadgeting
 siws
+browsermcp
+auditlogs
