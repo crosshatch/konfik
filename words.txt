@@ -82,3 +82,6 @@ siws
 browsermcp
 auditlogs
 napi
+stablecoins
+asciify
+braveheart
