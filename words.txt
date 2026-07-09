@@ -86,3 +86,5 @@ stablecoins
 asciify
 braveheart
 asciify
+devnet
+effectable
