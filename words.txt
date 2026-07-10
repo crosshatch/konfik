@@ -89,3 +89,5 @@ asciify
 devnet
 effectable
 smol
+undercounts
+pkill
