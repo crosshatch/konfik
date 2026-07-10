@@ -1,4 +1,4 @@
-import { Console, Effect, FileSystem, Path, String } from "effect"
+import { Console, Effect, FileSystem, Path, String, Array } from "effect"
 import { Command } from "effect/unstable/cli"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 
@@ -33,7 +33,7 @@ export const syncRepos = Command.make("sync-repos").pipe(
           return repoNames.map((repo) => ({ entry: `${org}/${repo}`, repoDir: path.join(orgDir, repo) }))
         }),
         { concurrency: "unbounded" },
-      ).pipe(Effect.map((groups) => groups.flat()))
+      ).pipe(Effect.map(Array.flatten))
       const branches = yield* Effect.forEach(
         repos,
         Effect.fn(function* ({ entry, repoDir }) {
