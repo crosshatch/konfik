@@ -1,28 +1,15 @@
-packages:
-  - repo-util
-
-catalog:
-  "@changesets/cli": ^2.30.0
-  "@effect/language-service": 0.86.2
-  "@effect/platform-node": ^4.0.0-beta.79
-  "@types/node": ^25.6.0
-  diff: ^8.0.3
-  dprint: ^0.54.0
-  effect: 4.0.0-beta.79
-  oxfmt: ^0.48.0
-  oxlint: ^1.62.0
-  ts-patch: ^3.3.0
-  typescript: ^6.0.2
-  yaml: ^2.8.3
-
 allowBuilds:
-  dprint: true
   msgpackr-extract: true
-  workerd: false
-
-minimumReleaseAgeExclude:
-  - "@distilled.cloud/*"
-  - alchemy@2.0.0-beta.46
-  - "@effect/platform-node-shared@4.0.0-beta.79"
-  - "@effect/platform-node@4.0.0-beta.79"
-  - effect@4.0.0-beta.79
+catalog:
+  "@changesets/cli": ^2.31.0
+  "@effect/language-service": ^0.86.6
+  "@effect/platform-node": ^4.0.0-beta.97
+  "@oxlint/plugins": ^1.73.0
+  "@types/node": ^26.1.1
+  diff: ^8.0.3
+  effect: ^4.0.0-beta.97
+  oxfmt: ^0.58.0
+  oxlint: ^1.73.0
+  ts-patch: ^4.0.1
+  typescript: ^6.0.3
+  yaml: ^2.9.0

@@ -10,8 +10,8 @@
   "devDependencies": {
     "@effect/language-service": "catalog:",
     "@effect/platform-node": "catalog:",
+    "@oxlint/plugins": "catalog:",
     "@types/node": "catalog:",
-    "dprint": "catalog:",
     "effect": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
