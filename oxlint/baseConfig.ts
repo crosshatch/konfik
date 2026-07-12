@@ -1,5 +1,19 @@
 import { defineConfig } from "oxlint"
 
+export const rest = (config?: { readonly ignorePatterns?: ReadonlyArray<string> | undefined }) => ({
+  env: { browser: true },
+  ignorePatterns: ["**/*.gen.ts", "**/routeTree.gen.ts", "repos", ...(config?.ignorePatterns ?? [])],
+  jsPlugins: [
+    {
+      name: "custom",
+      specifier: "./konfik/oxlint/rules/index.ts",
+    },
+  ],
+  rules: {
+    "custom/require-readonly-type-members": "error",
+  } as const,
+})
+
 export const baseConfig = defineConfig({
   plugins: ["eslint", "typescript", "unicorn", "import", "oxc", "promise", "vitest", "jest"],
   categories: {
