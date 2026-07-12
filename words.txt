@@ -100,3 +100,6 @@ tombi
 nixfmt
 nixd
 proptypes
+blockrun
+telnyx
+deepseek
