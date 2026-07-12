@@ -6,4 +6,12 @@
   "sortImports": {},
   "sortTailwindcss": { "functions": ["cn"] },
   "proseWrap": "always",
+  "overrides": [
+    {
+      "files": ["**/*.md", "**/*.mdx"],
+      "options": {
+        "printWidth": 80,
+      },
+    },
+  ],
 }
