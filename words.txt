@@ -99,3 +99,4 @@ taplo
 tombi
 nixfmt
 nixd
+proptypes
