@@ -94,3 +94,8 @@ pkill
 blockhash
 lamports
 tsgo
+safetynet
+taplo
+tombi
+nixfmt
+nixd

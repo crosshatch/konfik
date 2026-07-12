@@ -13,10 +13,13 @@ args = []
 [language-server.oxlint]
 command = "pnpm"
 args = ["exec", "oxlint", "--lsp"]
+environment = { PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN = "false" }
 
 [language-server.oxfmt]
 command = "pnpm"
-args = ["exec", "oxfmt", "--lsp", "--config", "./konfik/.oxfmtrc.jsonc"]
+args = ["exec", "oxfmt", "--lsp"]
+config = { oxc_language_server = { "fmt.configPath" = "./.oxfmtrc.jsonc" } }
+environment = { PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN = "false" }
 
 [language-server.emmet]
 command = "emmet-language-server"
@@ -45,21 +48,6 @@ language-servers = [
   "oxlint",
   "oxfmt",
   "tailwindcss-ls",
-  "cspell",
-  "scls",
-]
-auto-format = true
-
-[[language]]
-name = "docker-compose"
-roots = ["pnpm-workspace.yaml", ".git"]
-language-servers = [
-  "docker-compose-langserver",
-  { name = "yaml-language-server", except-features = [
-    "format",
-  ] },
-  "oxlint",
-  "oxfmt",
   "cspell",
   "scls",
 ]
