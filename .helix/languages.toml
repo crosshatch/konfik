@@ -21,6 +21,11 @@ args = ["exec", "oxfmt", "--lsp"]
 config = { oxc_language_server = { "fmt.configPath" = "./.oxfmtrc.jsonc" } }
 environment = { PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN = "false" }
 
+[language-server.typescript]
+command = "pnpm"
+args = ["exec", "tsc", "--lsp", "--stdio"]
+environment = { PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN = "false" }
+
 [language-server.emmet]
 command = "emmet-language-server"
 args = ["--stdio"]
@@ -135,7 +140,7 @@ auto-format = true
 name = "tsx"
 roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
-  { name = "typescript-language-server", except-features = [
+  { name = "typescript", except-features = [
     "format",
   ] },
   "emmet",
@@ -152,7 +157,7 @@ auto-format = true
 name = "typescript"
 roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
-  { name = "typescript-language-server", except-features = [
+  { name = "typescript", except-features = [
     "format",
   ] },
   "oxlint",
