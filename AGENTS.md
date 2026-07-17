@@ -1,8 +1,7 @@
 # Agents
 
 - Ensure that you're using the correct Effect primitives. Always refer to [the
-  Effect source
-  code][./repos/Effect-TS/effect](./repos/Effect-TS/effect).
+  Effect source code][./repos/Effect-TS/effect](./repos/Effect-TS/effect).
 - If you run into any library/environment/tool confusion, various
   (likely-relevant) repos are mounted at ./repos –– grep through the source.
 
