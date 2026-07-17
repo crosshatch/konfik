@@ -5,7 +5,7 @@ export {}
 // import { Args, Command, Options } from "@effect/cli"
 // import { FileSystem, Path } from "@effect/platform"
 // import { createPatch } from "diff"
-// import { Console, Effect, flow, Schema as S } from "effect"
+// import { Console, Effect, flow, Record, Schema as S } from "effect"
 // import * as yaml from "yaml"
 
 // const parsePackageJson = Effect.flatMap(
@@ -42,7 +42,7 @@ export {}
 // ): Effect.Effect<typeof Dependencies.Type, string> =>
 //   Effect.gen(function* () {
 //     const downgrades: Array<string> = []
-//     for (const [dep, childVersion] of Object.entries(child)) {
+//     for (const [dep, childVersion] of Record.toEntries(child)) {
 //       const parentVersion = parent[dep]
 //       if (parentVersion !== undefined && compareSemver(childVersion, parentVersion) < 0) {
 //         downgrades.push(`  ${dep}: child has ${childVersion}, parent has ${parentVersion}`)
@@ -51,7 +51,7 @@ export {}
 //     if (downgrades.length > 0) {
 //       return yield* Effect.fail(`Child catalog contains lower versions than parent:\n${downgrades.join("\n")}`)
 //     }
-//     return Object.fromEntries(Object.entries({ ...parent, ...child }).toSorted(([a], [b]) => a.localeCompare(b)))
+//     return Record.fromEntries(Record.toEntries({ ...parent, ...child }).toSorted(([a], [b]) => a.localeCompare(b)))
 //   })
 
 // const loadWorkspace = flow(
