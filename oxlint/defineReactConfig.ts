@@ -45,6 +45,7 @@ export const defineReactConfig = (files: Array<string>) =>
           "react/button-has-type": "off",
           "react/exhaustive-deps": "off",
           "react/forbid-component-props": "off",
+          "react/function-component-definition": "off",
           "react/iframe-missing-sandbox": "error",
           "react/jsx-boolean-value": "error",
           "react/jsx-curly-brace-presence": "error",
