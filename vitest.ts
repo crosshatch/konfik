@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url"
+
 import { defaultExclude, type ViteUserConfig } from "vitest/config"
 
 export default {
@@ -12,6 +14,6 @@ export default {
     fakeTimers: { toFake: undefined },
     sequence: { concurrent: true },
     server: { deps: { inline: ["@effect/vitest"] } },
-    setupFiles: [new URL("vitest.setup.ts", import.meta.url).pathname],
+    setupFiles: [fileURLToPath(new URL("vitest.setup.ts", import.meta.url))],
   },
 } satisfies ViteUserConfig
