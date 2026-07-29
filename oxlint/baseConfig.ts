@@ -153,6 +153,7 @@ export const baseConfig = defineConfig({
     "unicorn/consistent-function-scoping": "off",
     "unicorn/explicit-length-check": "off",
     "unicorn/filename-case": "off",
+    "unicorn/custom-error-definition": "off",
     "unicorn/max-nested-calls": "off",
     "unicorn/new-for-builtins": "off",
     "unicorn/no-abusive-eslint-disable": "off",

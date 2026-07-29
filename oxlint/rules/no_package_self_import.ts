@@ -19,17 +19,15 @@ const findPackageInfo = (context: Context): PackageInfo | null => {
   const { root } = Path.parse(cwd)
   while (directory !== root) {
     const cached = packageInfoByDirectory.get(directory)
-    if (cached !== undefined && cached !== null) return cached
-    if (cached === undefined) {
-      const packageJsonPath = Path.join(directory, "package.json")
-      if (Fs.existsSync(packageJsonPath)) {
-        const packageJson = JSON.parse(Fs.readFileSync(packageJsonPath, "utf8")) as { readonly name?: unknown }
-        const packageInfo = typeof packageJson.name === "string" ? { directory, name: packageJson.name } : null
-        packageInfoByDirectory.set(directory, packageInfo)
-        if (packageInfo !== null) return packageInfo
-      } else {
-        packageInfoByDirectory.set(directory, null)
-      }
+    if (cached) return cached
+    const packageJsonPath = Path.join(directory, "package.json")
+    if (Fs.existsSync(packageJsonPath)) {
+      const packageJson = JSON.parse(Fs.readFileSync(packageJsonPath, "utf8")) as { readonly name?: unknown }
+      const packageInfo = typeof packageJson.name === "string" ? { directory, name: packageJson.name } : null
+      packageInfoByDirectory.set(directory, packageInfo)
+      if (packageInfo !== null) return packageInfo
+    } else {
+      packageInfoByDirectory.set(directory, null)
     }
     if (directory === cwd) return null
     directory = Path.dirname(directory)
