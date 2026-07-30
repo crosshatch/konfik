@@ -51,7 +51,7 @@ export const baseConfig = defineConfig({
     "import/no-amd": "error",
     "import/no-anonymous-default-export": "off",
     "import/no-commonjs": "error",
-    "import/no-cycle": "error",
+    "import/no-cycle": ["error", { ignoreTypes: true }],
     "import/no-default-export": "off",
     "import/no-duplicates": ["error", { preferInline: true }],
     "import/no-empty-named-blocks": "off",
