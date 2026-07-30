@@ -133,7 +133,7 @@ export const baseConfig = defineConfig({
     "typescript/ban-types": "off",
     "typescript/consistent-indexed-object-style": "off",
     "typescript/consistent-type-definitions": "off",
-    "typescript/consistent-type-imports": "off",
+    "typescript/consistent-type-imports": ["error", { prefer: "type-imports", fixStyle: "inline-type-imports" }],
     "typescript/explicit-function-return-type": "off",
     "typescript/explicit-member-accessibility": "off",
     "typescript/explicit-module-boundary-types": "off",
