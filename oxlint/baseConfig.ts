@@ -11,6 +11,7 @@ export const rest = (config?: { readonly ignorePatterns?: ReadonlyArray<string> 
   ],
   rules: {
     "custom/no-package-self-import": "error",
+    "custom/require-effect-all-explicit-concurrency": "error",
     "custom/require-readonly-type-members": "error",
   } as const,
 })
