@@ -1,4 +1,4 @@
-import { Console, Effect, FileSystem, Path, String, Array } from "effect"
+import { Console, Effect, FileSystem, Path, Array } from "effect"
 import { Command } from "effect/unstable/cli"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 
@@ -34,30 +34,29 @@ export const syncRepos = Command.make("sync-repos").pipe(
         }),
         { concurrency: "unbounded" },
       ).pipe(Effect.map(Array.flatten))
-      const branches = yield* Effect.forEach(
+      yield* Effect.forEach(
         repos,
         Effect.fn(function* ({ entry, repoDir }) {
-          const branch = yield* ChildProcess.make`git rev-parse --abbrev-ref HEAD`.pipe(
+          yield* Console.log(`Syncing "${entry}" (main)`)
+          yield* ChildProcess.make`git fetch origin main`.pipe(
             ChildProcess.setCwd(repoDir),
-            spawner.string,
-            Effect.map(String.trim),
+            spawner.exitCode,
+            Effect.filterOrFail(
+              (exitCode) => exitCode === 0,
+              () => new Error(`Failed to fetch "${entry}"`),
+            ),
+            Effect.orDie,
           )
-          return { entry, repoDir, branch }
-        }),
-        { concurrency: "unbounded" },
-      )
-      const detached = branches.filter(({ branch }) => branch === "HEAD")
-      if (detached.length > 0) {
-        const message = `Cannot sync detached repos:\n${detached.map(({ entry }) => `  - ${entry}`).join("\n")}`
-        yield* Console.error(message)
-        return
-      }
-      yield* Effect.forEach(
-        branches,
-        Effect.fn(function* ({ branch, entry, repoDir }) {
-          yield* Console.log(`Syncing "${entry}" (${branch})`)
-          yield* ChildProcess.make`git pull origin ${branch}`.pipe(ChildProcess.setCwd(repoDir), spawner.exitCode)
-          yield* Console.log(`Synced "${entry}" (${branch})`)
+          yield* ChildProcess.make`git switch -C main origin/main`.pipe(
+            ChildProcess.setCwd(repoDir),
+            spawner.exitCode,
+            Effect.filterOrFail(
+              (exitCode) => exitCode === 0,
+              () => new Error(`Failed to switch "${entry}" to main`),
+            ),
+            Effect.orDie,
+          )
+          yield* Console.log(`Synced "${entry}" (main)`)
         }),
         { concurrency: "unbounded" },
       )
