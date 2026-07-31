@@ -140,7 +140,7 @@ export const baseConfig = defineConfig({
     "typescript/no-dynamic-delete": "off",
     "typescript/no-empty-object-type": "off",
     "typescript/no-explicit-any": "off",
-    "typescript/no-import-type-side-effects": "off",
+    "typescript/no-import-type-side-effects": "error",
     "typescript/no-invalid-void-type": "off",
     "typescript/no-namespace": ["error", { allowDeclarations: true }],
     "typescript/no-non-null-asserted-nullish-coalescing": "error",
