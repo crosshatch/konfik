@@ -183,6 +183,7 @@ export const baseConfig = defineConfig({
     "unicorn/prefer-spread": "off",
     "unicorn/prefer-string-raw": "off",
     "unicorn/prefer-string-replace-all": "off",
+    "unicorn/prefer-top-level-await": "off",
     "unicorn/require-module-specifiers": "off",
     "unicorn/require-post-message-target-origin": "off",
     "unicorn/switch-case-braces": "off",
