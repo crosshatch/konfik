@@ -37,6 +37,7 @@ export const baseConfig = defineConfig({
     "effecttsgo/crypto-random-uuid": "off",
     "effecttsgo/missing-pipeable-signature": "off",
     "effecttsgo/node-builtin-import": "off",
+    "effecttsgo/prefer-schema-over-json": "off",
     "effecttsgo/process-env": "off",
     "effecttsgo/return-effect-in-gen": "off",
     "effecttsgo/strict-boolean-expressions": "off",
