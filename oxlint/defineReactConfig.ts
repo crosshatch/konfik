@@ -70,6 +70,7 @@ export const defineReactConfig = (files: Array<string>) =>
           "react/no-direct-mutation-state": "error",
           "react/no-multi-comp": "off",
           "react/no-unescaped-entities": "off",
+          "react/no-unstable-nested-components": "off",
           "react/only-export-components": "off",
           "react/react-in-jsx-scope": "off",
           "react/rules-of-hooks": "error",
