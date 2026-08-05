@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prepare": "effect-tsgo patch",
+    "prepare": "effect-tsgo patch --oxlint",
     "build": "tsc -b",
     "watch": "tsc -b -w",
     "format": "oxfmt --config ./.oxfmtrc.jsonc --disable-nested-config ."

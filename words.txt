@@ -110,3 +110,4 @@ liminext
 nexample
 tweety
 agentic
+tsgolint

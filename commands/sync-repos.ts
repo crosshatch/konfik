@@ -40,7 +40,7 @@ export const syncRepos = Command.make("sync-repos").pipe(
           yield* Console.log(`Syncing "${entry}" (main)`)
           yield* ChildProcess.make`git fetch origin main`.pipe(
             ChildProcess.setCwd(repoDir),
-            spawner.exitCode,
+            (v) => spawner.exitCode(v),
             Effect.filterOrFail(
               (exitCode) => exitCode === 0,
               () => new Error(`Failed to fetch "${entry}"`),
@@ -49,7 +49,7 @@ export const syncRepos = Command.make("sync-repos").pipe(
           )
           yield* ChildProcess.make`git switch -C main origin/main`.pipe(
             ChildProcess.setCwd(repoDir),
-            spawner.exitCode,
+            (v) => spawner.exitCode(v),
             Effect.filterOrFail(
               (exitCode) => exitCode === 0,
               () => new Error(`Failed to switch "${entry}" to main`),
