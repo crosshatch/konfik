@@ -133,6 +133,7 @@ export const baseConfig = defineConfig({
     "promise/prefer-await-to-then": "off",
     "promise/prefer-catch": "error",
     "promise/valid-params": "error",
+    "react/no-unstable-nested-components": "off",
     "require-await": "off",
     "require-yield": "off",
     "sort-imports": "off",
