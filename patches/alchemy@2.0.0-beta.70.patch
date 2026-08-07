@@ -1,0 +1,45 @@
+diff --git a/bin/exec.js b/bin/exec.js
+--- a/bin/exec.js
++++ b/bin/exec.js
+@@ -181 +181 @@
+-	AuthError = class extends Schema.TaggedErrorClass()("AuthError", {
++	AuthError = class extends Schema.TaggedError()("AuthError", {
+diff --git a/lib/Auth/AuthProvider.js b/lib/Auth/AuthProvider.js
+--- a/lib/Auth/AuthProvider.js
++++ b/lib/Auth/AuthProvider.js
+@@ -39 +39 @@
+-export class AuthError extends Schema.TaggedErrorClass()("AuthError", {
++export class AuthError extends Schema.TaggedError()("AuthError", {
+diff --git a/lib/Bundle/Bundle.js b/lib/Bundle/Bundle.js
+--- a/lib/Bundle/Bundle.js
++++ b/lib/Bundle/Bundle.js
+@@ -18 +18 @@
+-export class BundleError extends Schema.TaggedErrorClass()("BundleError", {
++export class BundleError extends Schema.TaggedError()("BundleError", {
+diff --git a/lib/Cloudflare/Access.js b/lib/Cloudflare/Access.js
+--- a/lib/Cloudflare/Access.js
++++ b/lib/Cloudflare/Access.js
+@@ -10 +10 @@
+-export class AccessError extends Schema.TaggedErrorClass()("AccessError", {
++export class AccessError extends Schema.TaggedError()("AccessError", {
+diff --git a/lib/Cloudflare/Workers/RuntimeBindings.js b/lib/Cloudflare/Workers/RuntimeBindings.js
+--- a/lib/Cloudflare/Workers/RuntimeBindings.js
++++ b/lib/Cloudflare/Workers/RuntimeBindings.js
+@@ -6 +6 @@
+-export class WorkerValidationError extends Schema.TaggedErrorClass()("WorkerValidationError", {
++export class WorkerValidationError extends Schema.TaggedError()("WorkerValidationError", {
+diff --git a/lib/Cli/commands/cloudflare.js b/lib/Cli/commands/cloudflare.js
+--- a/lib/Cli/commands/cloudflare.js
++++ b/lib/Cli/commands/cloudflare.js
+@@ -76 +76 @@ const teardownCommand = Command.make("teardown", {
+-}))).pipe(Command.withHidden, Command.withDescription("Tear down the cloudflare state store"));
++}))).pipe(Command.withDescription("Tear down the cloudflare state store"));
+diff --git a/lib/Cli/commands/nuke.js b/lib/Cli/commands/nuke.js
+--- a/lib/Cli/commands/nuke.js
++++ b/lib/Cli/commands/nuke.js
+@@ -561,4 +561,3 @@ const nukeCommand = Command.make("nuke", {
+ }))).pipe(
+-// hide the command because it's dangerous and we don't want agents to discover and use it
+-Command.withHidden, Command.withDescription("Enumerate every live resource across the stack's providers and delete " +
++Command.withDescription("Enumerate every live resource across the stack's providers and delete " +
+     "them. DESTRUCTIVE — use --include/--exclude/--filter to scope it."));

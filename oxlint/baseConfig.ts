@@ -212,6 +212,7 @@ export const baseConfig = defineConfig({
     "unicorn/require-module-specifiers": "off",
     "unicorn/require-post-message-target-origin": "off",
     "unicorn/switch-case-braces": "off",
+    "unicorn/throw-new-error": "off",
     "vitest/no-conditional-tests": "error",
     "vitest/no-importing-vitest-globals": "off",
     "vitest/no-import-node-test": "error",
