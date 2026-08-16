@@ -128,6 +128,7 @@ export const baseConfig = defineConfig({
     "prefer-const": "off",
     "prefer-destructuring": "off",
     "promise/always-return": "error",
+    "promise/catch-or-return": "off",
     "promise/no-multiple-resolved": "error",
     "promise/no-nesting": "error",
     "promise/no-new-statics": "error",

@@ -29,6 +29,7 @@
         "name": "@effect/language-service",
         "transform": "@effect/language-service/transform",
         "diagnosticSeverity": {
+          "lazyEffect": "off",
           "returnEffectInGen": "off",
           "layerMergeAllWithDependencies": "off",
           "preferSchemaOverJson": "off",

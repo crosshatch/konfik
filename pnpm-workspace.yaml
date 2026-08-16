@@ -1,14 +1,13 @@
 allowBuilds:
   msgpackr-extract: true
 catalog:
-  "@changesets/cli": ^2.31.0
-  "@effect/tsgo": 0.31.0
+  "@effect/tsgo": 0.36.5
   "@effect/language-service": ^0.86.6
-  "@effect/platform-node": ^4.0.0-beta.97
+  "@effect/platform-node": ^4.0.0-rc.109
   "@oxlint/plugins": ^1.73.0
   "@types/node": ^26.1.1
   diff: ^8.0.3
-  effect: ^4.0.0-beta.97
+  effect: ^4.0.0-rc.109
   oxfmt: ^0.58.0
   oxlint: ^1.73.0
   typescript: ^7.0.2
