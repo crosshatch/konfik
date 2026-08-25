@@ -161,6 +161,7 @@ export const baseConfig = defineConfig({
     "typescript/no-floating-promises": "off",
     "typescript/no-import-type-side-effects": "error",
     "typescript/no-invalid-void-type": "off",
+    "typescript/no-misused-spread": "off",
     "typescript/no-namespace": ["error", { allowDeclarations: true }],
     "typescript/no-confusing-void-expression": "off",
     "typescript/no-non-null-asserted-nullish-coalescing": "error",

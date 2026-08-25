@@ -111,3 +111,4 @@ agentic
 tsgolint
 respondable
 interruptible
+demi
