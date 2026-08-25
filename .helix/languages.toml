@@ -135,7 +135,7 @@ auto-format = true
 name = "tsx"
 roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
-  { name = "typescript-language-server", except-features = [
+  { name = "tsc", except-features = [
     "format",
   ] },
   "emmet",
@@ -152,7 +152,7 @@ auto-format = true
 name = "typescript"
 roots = ["pnpm-workspace.yaml", ".git"]
 language-servers = [
-  { name = "typescript-language-server", except-features = [
+  { name = "tsc", except-features = [
     "format",
   ] },
   "oxlint",
