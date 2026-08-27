@@ -112,3 +112,4 @@ tsgolint
 respondable
 interruptible
 demi
+effecttsgo
