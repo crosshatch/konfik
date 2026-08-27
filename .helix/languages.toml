@@ -10,16 +10,28 @@ args = ["--stdio"]
 command = "sqls"
 args = []
 
+[language-server.tsc]
+command = "pnpm"
+args = ["exec", "tsc", "--lsp", "--stdio"]
+environment = { PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN = "false" }
+
 [language-server.oxlint]
 command = "pnpm"
 args = ["exec", "oxlint", "--lsp"]
 environment = { PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN = "false" }
 
+[language-server.oxlint.config]
+configPath = "./oxlint.config.ts"
+typeAware = true
+disableNestedConfig = true
+
 [language-server.oxfmt]
 command = "pnpm"
 args = ["exec", "oxfmt", "--lsp"]
-config = { oxc_language_server = { "fmt.configPath" = "./.oxfmtrc.jsonc" } }
 environment = { PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN = "false" }
+
+[language-server.oxfmt.config]
+"fmt.configPath" = "./.oxfmtrc.jsonc"
 
 [language-server.emmet]
 command = "emmet-language-server"
@@ -63,6 +75,28 @@ language-servers = [
   "emmet",
   "oxlint",
   "oxfmt",
+  "tailwindcss-ls",
+  "cspell",
+  "scls",
+]
+auto-format = true
+
+[[language]]
+name = "javascript"
+roots = ["pnpm-workspace.yaml", ".git"]
+language-servers = [{ name = "tsc", except-features = ["format"] }, "oxlint", "oxfmt", "cspell", "scls"]
+auto-format = true
+
+[[language]]
+name = "jsx"
+roots = ["pnpm-workspace.yaml", ".git"]
+language-servers = [
+  { name = "tsc", except-features = [
+    "format",
+  ] },
+  "emmet",
+  "oxfmt",
+  "oxlint",
   "tailwindcss-ls",
   "cspell",
   "scls",
