@@ -12,12 +12,12 @@ args = []
 
 [language-server.tsc]
 command = "pnpm"
-args = ["exec", "tsc", "--lsp", "--stdio"]
+args = ["--silent", "exec", "tsc", "--lsp", "--stdio"]
 environment = { PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN = "false" }
 
 [language-server.oxlint]
 command = "pnpm"
-args = ["exec", "oxlint", "--lsp"]
+args = ["--silent", "exec", "oxlint", "--lsp"]
 environment = { PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN = "false" }
 
 [language-server.oxlint.config]
@@ -25,12 +25,20 @@ configPath = "./oxlint.config.ts"
 typeAware = true
 disableNestedConfig = true
 
+[language-server.oxlint.config.oxc_language_server]
+configPath = "./oxlint.config.ts"
+typeAware = true
+disableNestedConfig = true
+
 [language-server.oxfmt]
 command = "pnpm"
-args = ["exec", "oxfmt", "--lsp"]
+args = ["--silent", "exec", "oxfmt", "--lsp"]
 environment = { PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN = "false" }
 
 [language-server.oxfmt.config]
+"fmt.configPath" = "./.oxfmtrc.jsonc"
+
+[language-server.oxfmt.config.oxc_language_server]
 "fmt.configPath" = "./.oxfmtrc.jsonc"
 
 [language-server.emmet]
