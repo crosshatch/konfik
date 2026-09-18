@@ -11,7 +11,6 @@ export default {
   },
   test: {
     exclude: [...defaultExclude, "**/dist/**"],
-    fakeTimers: { toFake: undefined },
     sequence: { concurrent: true },
     server: { deps: { inline: ["@effect/vitest"] } },
     setupFiles: [fileURLToPath(new URL("vitest.setup.ts", import.meta.url))],

@@ -212,7 +212,6 @@ language-servers = [
   { name = "yaml-language-server", except-features = [
     "format",
   ] },
-  "ansible-language-server",
   "oxlint",
   "oxfmt",
   "cspell",
