@@ -51,6 +51,8 @@ export const baseConfig = defineConfig({
     "eslint/new-cap": "off",
     "eslint/no-unused-vars": "off",
     "eslint/no-use-before-define": "off",
+    "eslint/no-redeclare": "off",
+    "eslint/one-var": "off",
     "eslint/prefer-rest-params": "off",
     "func-names": "off",
     "func-style": "off",
