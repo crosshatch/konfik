@@ -4,7 +4,7 @@ import { FileSystem, Path, Console, Effect } from "effect"
 import { Command, Flag } from "effect/unstable/cli"
 
 /** Directories `clean` never descends into, regardless of `--ignore`: dependency trees, nested git worktrees, and git metadata. */
-const alwaysIgnore = ["**/node_modules", "**/.worktrees", "**/.git"]
+const alwaysIgnore = ["**/node_modules", "**/.worktrees", "**/.git", "**/repos"]
 
 export const clean = Command.make("clean", {
   ignore: Flag.String("ignore").pipe(Flag.atLeast(0)),
