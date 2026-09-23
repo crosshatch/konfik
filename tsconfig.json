@@ -1,4 +1,4 @@
 {
   "extends": "./tsconfig.base",
-  "include": ["commands", "lints", "main.ts", "vitest.ts", "vitest.setup.ts"]
+  "include": ["commands", "oxlint", "main.ts", "vitest.ts", "vitest.setup.ts"]
 }

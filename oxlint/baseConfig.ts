@@ -2,7 +2,7 @@ import { defineConfig } from "oxlint"
 
 export const rest = (config?: { readonly ignorePatterns?: ReadonlyArray<string> | undefined }) => ({
   env: { browser: true },
-  ignorePatterns: ["**/*.gen.ts", "**/routeTree.gen.ts", "repos", ...(config?.ignorePatterns ?? [])],
+  ignorePatterns: ["**/*.gen.ts", "**/routeTree.gen.ts", "repos", ".worktrees", ...(config?.ignorePatterns ?? [])],
   jsPlugins: [
     {
       name: "custom",

@@ -41,5 +41,5 @@
     "project-words"
   ],
   "useGitignore": true,
-  "ignorePaths": ["LICENSE"]
+  "ignorePaths": ["LICENSE", "**/.worktrees/**"]
 }

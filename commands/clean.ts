@@ -3,12 +3,16 @@ import { glob } from "node:fs/promises"
 import { FileSystem, Path, Console, Effect } from "effect"
 import { Command, Flag } from "effect/unstable/cli"
 
+/** Directories `clean` never descends into, regardless of `--ignore`: dependency trees, nested git worktrees, and git metadata. */
+const alwaysIgnore = ["**/node_modules", "**/.worktrees", "**/.git"]
+
 export const clean = Command.make("clean", {
   ignore: Flag.String("ignore").pipe(Flag.atLeast(0)),
 }).pipe(
   Command.withHandler(
     Effect.fn(function* ({ ignore }) {
-      const packages = yield* Effect.promise(() => Array.fromAsync(glob("**/package.json", { exclude: ignore })))
+      const exclude = [...alwaysIgnore, ...ignore]
+      const packages = yield* Effect.promise(() => Array.fromAsync(glob("**/package.json", { exclude })))
       const path = yield* Path.Path
       const fs = yield* FileSystem.FileSystem
       yield* Effect.forEach(
